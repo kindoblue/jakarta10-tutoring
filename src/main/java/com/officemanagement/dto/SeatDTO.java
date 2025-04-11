@@ -6,8 +6,15 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.*;
 
 /** Data Transfer Object for Seat entities. */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class SeatDTO {
 
     private Long id;
@@ -25,37 +32,35 @@ public class SeatDTO {
     private Set<Long> employeeIds; // IDs of employees assigned to this seat
     private boolean occupied; // Calculated field
 
-    // Default constructor
-    public SeatDTO() {}
+    // Default constructor provided by @NoArgsConstructor
 
-    // Constructor to map from Seat entity
+    // Constructor to map from Seat entity (Keep this custom one)
     public SeatDTO(Seat seat) {
-        this.id = seat.getId();
-        this.seatNumber = seat.getSeatNumber();
-        this.createdAt = seat.getCreatedAt();
-        this.x = seat.getX();
-        this.y = seat.getY();
-        this.width = seat.getWidth();
-        this.height = seat.getHeight();
-        this.rotation = seat.getRotation();
+        this.id = seat.getId(); // Assumes Seat has @Getter
+        this.seatNumber = seat.getSeatNumber(); // Assumes Seat has @Getter
+        this.createdAt = seat.getCreatedAt(); // Assumes Seat has @Getter
+        this.x = seat.getX(); // Assumes Seat has @Getter
+        this.y = seat.getY(); // Assumes Seat has @Getter
+        this.width = seat.getWidth(); // Assumes Seat has @Getter
+        this.height = seat.getHeight(); // Assumes Seat has @Getter
+        this.rotation = seat.getRotation(); // Assumes Seat has @Getter
 
-        if (seat.getRoom() != null) {
-            this.roomId = seat.getRoom().getId();
-            this.roomName = seat.getRoom().getName(); // Assuming OfficeRoom has getName()
-            if (seat.getRoom().getFloor() != null) {
-                this.floorId = seat.getRoom().getFloor().getId();
-                this.floorName =
-                        seat.getRoom().getFloor().getName(); // Assuming Floor has getName()
+        if (seat.getRoom() != null) { // Assumes Seat has @Getter
+            this.roomId = seat.getRoom().getId(); // Assumes OfficeRoom has @Getter
+            this.roomName = seat.getRoom().getName(); // Assumes OfficeRoom has @Getter
+            if (seat.getRoom().getFloor() != null) { // Assumes OfficeRoom has @Getter
+                this.floorId = seat.getRoom().getFloor().getId(); // Assumes Floor has @Getter
+                this.floorName = seat.getRoom().getFloor().getName(); // Assumes Floor has @Getter
             }
         }
 
-        if (seat.getEmployees() != null) {
+        if (seat.getEmployees() != null) { // Assumes Seat has @Getter
             // Ensure employees collection is initialized if lazy
             // Hibernate.initialize(seat.getEmployees()); // Potentially needed if called outside
             // transaction
             this.employeeIds =
                     seat.getEmployees().stream()
-                            .map(Employee::getId) // Assuming Employee has getId()
+                            .map(Employee::getId) // Assumes Employee has @Getter
                             .collect(Collectors.toSet());
             this.occupied = !this.employeeIds.isEmpty();
         } else {
@@ -64,117 +69,5 @@ public class SeatDTO {
         }
     }
 
-    // --- Getters and Setters ---
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getSeatNumber() {
-        return seatNumber;
-    }
-
-    public void setSeatNumber(String seatNumber) {
-        this.seatNumber = seatNumber;
-    }
-
-    public Long getRoomId() {
-        return roomId;
-    }
-
-    public void setRoomId(Long roomId) {
-        this.roomId = roomId;
-    }
-
-    public String getRoomName() {
-        return roomName;
-    }
-
-    public void setRoomName(String roomName) {
-        this.roomName = roomName;
-    }
-
-    public Long getFloorId() {
-        return floorId;
-    }
-
-    public void setFloorId(Long floorId) {
-        this.floorId = floorId;
-    }
-
-    public String getFloorName() {
-        return floorName;
-    }
-
-    public void setFloorName(String floorName) {
-        this.floorName = floorName;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Float getX() {
-        return x;
-    }
-
-    public void setX(Float x) {
-        this.x = x;
-    }
-
-    public Float getY() {
-        return y;
-    }
-
-    public void setY(Float y) {
-        this.y = y;
-    }
-
-    public Float getWidth() {
-        return width;
-    }
-
-    public void setWidth(Float width) {
-        this.width = width;
-    }
-
-    public Float getHeight() {
-        return height;
-    }
-
-    public void setHeight(Float height) {
-        this.height = height;
-    }
-
-    public Float getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(Float rotation) {
-        this.rotation = rotation;
-    }
-
-    public Set<Long> getEmployeeIds() {
-        return employeeIds;
-    }
-
-    public void setEmployeeIds(Set<Long> employeeIds) {
-        this.employeeIds = employeeIds;
-    }
-
-    public boolean isOccupied() {
-        return occupied;
-    }
-
-    public void setOccupied(boolean occupied) {
-        this.occupied = occupied;
-    }
+    // --- Getters and Setters removed (using @Getter, @Setter) ---
 }

@@ -5,24 +5,38 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "floors")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class Floor {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "floor_seq")
     @SequenceGenerator(name = "floor_seq", sequenceName = "floor_seq", allocationSize = 1)
     @Column(name = "id", nullable = false, updatable = false)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @Column(name = "floor_number")
+    @ToString.Include
     private Integer floorNumber;
 
-    private String name;
+    @ToString.Include private String name;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
+    @ToString.Include
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "floor", fetch = FetchType.EAGER)
@@ -33,37 +47,13 @@ public class Floor {
     @JsonIgnoreProperties("floor")
     private FloorPlanimetry planimetryData;
 
-    // Default constructor required by JPA/Hibernate
-    public Floor() {}
+    // Default constructor provided by @NoArgsConstructor
 
+    // Keep custom constructor
     public Floor(Long id, String name, Integer level) {
         this.id = id;
         this.name = name;
         this.floorNumber = level;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getFloorNumber() {
-        return floorNumber;
-    }
-
-    public void setFloorNumber(Integer floorNumber) {
-        this.floorNumber = floorNumber;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**
@@ -99,23 +89,7 @@ public class Floor {
     public void setPlanimetryData(FloorPlanimetry planimetryData) {
         this.planimetryData = planimetryData;
         if (planimetryData != null) {
-            planimetryData.setFloor(this);
+            planimetryData.setFloor(this); // Assumes FloorPlanimetry has @Setter
         }
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<OfficeRoom> getRooms() {
-        return rooms;
-    }
-
-    public void setRooms(Set<OfficeRoom> rooms) {
-        this.rooms = rooms;
     }
 }

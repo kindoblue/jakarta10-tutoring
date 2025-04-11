@@ -5,9 +5,19 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "office_rooms")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"floor", "seats"})
 public class OfficeRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "office_room_seq")
@@ -16,6 +26,7 @@ public class OfficeRoom {
             sequenceName = "office_room_seq",
             allocationSize = 1)
     @Column(name = "id", nullable = false, updatable = false)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @ManyToOne
@@ -46,84 +57,4 @@ public class OfficeRoom {
     @OneToMany(mappedBy = "room", fetch = FetchType.EAGER)
     @JsonIgnoreProperties("room")
     private Set<Seat> seats = new HashSet<>();
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Floor getFloor() {
-        return floor;
-    }
-
-    public void setFloor(Floor floor) {
-        this.floor = floor;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Float getX() {
-        return x;
-    }
-
-    public void setX(Float x) {
-        this.x = x;
-    }
-
-    public Float getY() {
-        return y;
-    }
-
-    public void setY(Float y) {
-        this.y = y;
-    }
-
-    public Float getWidth() {
-        return width;
-    }
-
-    public void setWidth(Float width) {
-        this.width = width;
-    }
-
-    public Float getHeight() {
-        return height;
-    }
-
-    public void setHeight(Float height) {
-        this.height = height;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<Seat> getSeats() {
-        return seats;
-    }
-
-    public void setSeats(Set<Seat> seats) {
-        this.seats = seats;
-    }
 }

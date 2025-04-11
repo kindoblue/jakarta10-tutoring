@@ -5,20 +5,33 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "employees")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "employee_seq")
     @SequenceGenerator(name = "employee_seq", sequenceName = "employee_seq", allocationSize = 1)
     @Column(name = "id", nullable = false, updatable = false)
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
     @Column(name = "full_name")
+    @ToString.Include
     private String fullName;
 
-    private String occupation;
+    @ToString.Include private String occupation;
 
     @ManyToMany
     @JoinTable(
@@ -29,43 +42,8 @@ public class Employee {
     private Set<Seat> seats = new HashSet<>();
 
     @Column(name = "created_at")
+    @ToString.Include
     private LocalDateTime createdAt;
-
-    // Constructors
-    public Employee() {}
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getOccupation() {
-        return occupation;
-    }
-
-    public void setOccupation(String occupation) {
-        this.occupation = occupation;
-    }
-
-    public Set<Seat> getSeats() {
-        return seats;
-    }
-
-    public void setSeats(Set<Seat> seats) {
-        this.seats = seats;
-    }
 
     public void addSeat(Seat seat) {
         seats.add(seat);
@@ -75,13 +53,5 @@ public class Employee {
     public void removeSeat(Seat seat) {
         seats.remove(seat);
         seat.getEmployees().remove(this);
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

@@ -73,12 +73,17 @@ class EmployeeTest {
     void testSetSeats() {
         HashSet<Seat> seats = new HashSet<>();
         Seat seat1 = new Seat();
+        seat1.setId(1L);
         Seat seat2 = new Seat();
+        seat2.setId(2L);
+
         seats.add(seat1);
         seats.add(seat2);
 
         employee.setSeats(seats);
-        assertEquals(seats, employee.getSeats());
+        assertNotNull(employee.getSeats());
         assertEquals(2, employee.getSeats().size());
+        assertTrue(employee.getSeats().contains(seat1));
+        assertTrue(employee.getSeats().contains(seat2));
     }
 }

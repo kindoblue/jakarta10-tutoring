@@ -6,10 +6,17 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.*;
 
 // Import Hibernate
 
 /** Data Transfer Object for Floor entities. */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class FloorDTO {
 
     private Long id;
@@ -19,79 +26,30 @@ public class FloorDTO {
     private Set<Long> roomIds; // IDs of rooms on this floor
     private boolean hasPlanimetry;
 
-    // Default constructor
-    public FloorDTO() {}
+    // Default constructor provided by @NoArgsConstructor
 
-    // Constructor to map from Floor entity
+    // Constructor to map from Floor entity (Keep this custom one)
     public FloorDTO(Floor floor) {
-        this.id = floor.getId();
-        this.name = floor.getName();
-        this.floorNumber = floor.getFloorNumber();
-        this.createdAt = floor.getCreatedAt();
+        this.id = floor.getId(); // Assumes Floor has @Getter
+        this.name = floor.getName(); // Assumes Floor has @Getter
+        this.floorNumber = floor.getFloorNumber(); // Assumes Floor has @Getter
+        this.createdAt = floor.getCreatedAt(); // Assumes Floor has @Getter
 
         // Safely handle potentially lazy collections
-        if (floor.getRooms() != null) {
+        if (floor.getRooms() != null) { // Assumes Floor has @Getter
             // Hibernate.initialize(floor.getRooms()); // May be needed
             this.roomIds =
-                    floor.getRooms().stream().map(OfficeRoom::getId).collect(Collectors.toSet());
+                    floor.getRooms().stream()
+                            .map(OfficeRoom::getId) // Assumes OfficeRoom has @Getter
+                            .collect(Collectors.toSet());
         } else {
             this.roomIds = Collections.emptySet();
         }
 
         // Check if planimetry exists without loading the potentially large data
-        // This requires a specific query or a field on Floor indicating presence
-        // For simplicity, let's assume Floor has a getter isPlanimetrySet() or similar
-        // Or check if the association is non-null (might trigger lazy load)
+        // Use the custom getPlanimetry() method we kept in Floor
         this.hasPlanimetry = floor.getPlanimetry() != null;
     }
 
-    // --- Getters and Setters ---
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getFloorNumber() {
-        return floorNumber;
-    }
-
-    public void setFloorNumber(Integer floorNumber) {
-        this.floorNumber = floorNumber;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<Long> getRoomIds() {
-        return roomIds;
-    }
-
-    public void setRoomIds(Set<Long> roomIds) {
-        this.roomIds = roomIds;
-    }
-
-    public boolean isHasPlanimetry() {
-        return hasPlanimetry;
-    }
-
-    public void setHasPlanimetry(boolean hasPlanimetry) {
-        this.hasPlanimetry = hasPlanimetry;
-    }
+    // --- Getters and Setters removed (using @Getter, @Setter) ---
 }

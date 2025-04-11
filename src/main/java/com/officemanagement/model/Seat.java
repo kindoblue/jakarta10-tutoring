@@ -6,15 +6,26 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "seats")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = {"room", "employees"})
 public class Seat {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seat_seq")
     @SequenceGenerator(name = "seat_seq", sequenceName = "seat_seq", allocationSize = 1)
     @Column(name = "id", nullable = false, updatable = false)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @ManyToOne
@@ -53,85 +64,5 @@ public class Seat {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     public boolean isOccupied() {
         return !employees.isEmpty();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public OfficeRoom getRoom() {
-        return room;
-    }
-
-    public void setRoom(OfficeRoom room) {
-        this.room = room;
-    }
-
-    public String getSeatNumber() {
-        return seatNumber;
-    }
-
-    public void setSeatNumber(String seatNumber) {
-        this.seatNumber = seatNumber;
-    }
-
-    public Float getX() {
-        return x;
-    }
-
-    public void setX(Float x) {
-        this.x = x;
-    }
-
-    public Float getY() {
-        return y;
-    }
-
-    public void setY(Float y) {
-        this.y = y;
-    }
-
-    public Float getWidth() {
-        return width;
-    }
-
-    public void setWidth(Float width) {
-        this.width = width;
-    }
-
-    public Float getHeight() {
-        return height;
-    }
-
-    public void setHeight(Float height) {
-        this.height = height;
-    }
-
-    public Float getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(Float rotation) {
-        this.rotation = rotation;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<Employee> getEmployees() {
-        return employees;
-    }
-
-    public void setEmployees(Set<Employee> employees) {
-        this.employees = employees;
     }
 }

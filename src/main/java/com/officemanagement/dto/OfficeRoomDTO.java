@@ -5,8 +5,15 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.*;
 
 /** Data Transfer Object for OfficeRoom entities. */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode
+@ToString
 public class OfficeRoomDTO {
 
     private Long id;
@@ -21,125 +28,36 @@ public class OfficeRoomDTO {
     private Float height;
     private Set<Long> seatIds; // Include IDs of seats in this room
 
-    // Default constructor
-    public OfficeRoomDTO() {}
+    // Default constructor provided by @NoArgsConstructor
 
-    // Constructor to map from OfficeRoom entity
+    // Constructor to map from OfficeRoom entity (Keep this custom one)
     public OfficeRoomDTO(OfficeRoom room) {
-        this.id = room.getId();
-        this.name = room.getName();
-        this.roomNumber = room.getRoomNumber();
-        this.createdAt = room.getCreatedAt();
-        this.x = room.getX();
-        this.y = room.getY();
-        this.width = room.getWidth();
-        this.height = room.getHeight();
+        this.id = room.getId(); // Assumes OfficeRoom has @Getter
+        this.name = room.getName(); // Assumes OfficeRoom has @Getter
+        this.roomNumber = room.getRoomNumber(); // Assumes OfficeRoom has @Getter
+        this.createdAt = room.getCreatedAt(); // Assumes OfficeRoom has @Getter
+        this.x = room.getX(); // Assumes OfficeRoom has @Getter
+        this.y = room.getY(); // Assumes OfficeRoom has @Getter
+        this.width = room.getWidth(); // Assumes OfficeRoom has @Getter
+        this.height = room.getHeight(); // Assumes OfficeRoom has @Getter
 
-        if (room.getFloor() != null) {
-            this.floorId = room.getFloor().getId();
-            this.floorName = room.getFloor().getName(); // Assuming Floor has getName()
+        if (room.getFloor() != null) { // Assumes OfficeRoom has @Getter
+            this.floorId = room.getFloor().getId(); // Assumes Floor has @Getter
+            this.floorName = room.getFloor().getName(); // Assumes Floor has @Getter
         }
 
-        if (room.getSeats() != null) {
+        if (room.getSeats() != null) { // Assumes OfficeRoom has @Getter
             // Ensure seats collection is initialized if lazy
             // Hibernate.initialize(room.getSeats()); // Potentially needed if called outside
             // transaction
             this.seatIds =
                     room.getSeats().stream()
-                            .map(seat -> seat.getId()) // Assuming Seat has getId()
+                            .map(seat -> seat.getId()) // Assumes Seat has @Getter
                             .collect(Collectors.toSet());
         } else {
             this.seatIds = Collections.emptySet();
         }
     }
 
-    // Getters and Setters
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getRoomNumber() {
-        return roomNumber;
-    }
-
-    public void setRoomNumber(String roomNumber) {
-        this.roomNumber = roomNumber;
-    }
-
-    public Long getFloorId() {
-        return floorId;
-    }
-
-    public void setFloorId(Long floorId) {
-        this.floorId = floorId;
-    }
-
-    public String getFloorName() {
-        return floorName;
-    }
-
-    public void setFloorName(String floorName) {
-        this.floorName = floorName;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Float getX() {
-        return x;
-    }
-
-    public void setX(Float x) {
-        this.x = x;
-    }
-
-    public Float getY() {
-        return y;
-    }
-
-    public void setY(Float y) {
-        this.y = y;
-    }
-
-    public Float getWidth() {
-        return width;
-    }
-
-    public void setWidth(Float width) {
-        this.width = width;
-    }
-
-    public Float getHeight() {
-        return height;
-    }
-
-    public void setHeight(Float height) {
-        this.height = height;
-    }
-
-    public Set<Long> getSeatIds() {
-        return seatIds;
-    }
-
-    public void setSeatIds(Set<Long> seatIds) {
-        this.seatIds = seatIds;
-    }
+    // Getters and Setters removed (using @Getter, @Setter)
 }

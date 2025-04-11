@@ -2,6 +2,11 @@ package com.officemanagement.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Entity representing floor planimetry (SVG floor plans) Separated into a dedicated table for
@@ -9,9 +14,15 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "floor_planimetry")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(exclude = "floor")
 public class FloorPlanimetry {
     @Id
     @Column(name = "floor_id")
+    @EqualsAndHashCode.Include
     private Long floorId;
 
     @OneToOne
@@ -26,8 +37,6 @@ public class FloorPlanimetry {
     private LocalDateTime lastUpdated;
 
     // Constructors
-    public FloorPlanimetry() {}
-
     public FloorPlanimetry(Floor floor, String planimetry) {
         this.floor = floor;
         this.planimetry = planimetry;

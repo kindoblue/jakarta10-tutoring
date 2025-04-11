@@ -5,8 +5,15 @@ import com.officemanagement.model.Seat; // Ensure Seat import if needed
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.*;
 
 /** Data Transfer Object for Employee entities. */
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor // Optional: provides a constructor for all fields
+@EqualsAndHashCode
+@ToString
 public class EmployeeDTO {
 
     private Long id;
@@ -15,62 +22,24 @@ public class EmployeeDTO {
     private LocalDateTime createdAt;
     private Set<Long> seatIds; // Represent seats by their IDs
 
-    // Default constructor (required by Jackson/JAX-RS)
-    public EmployeeDTO() {}
+    // Default constructor provided by @NoArgsConstructor
 
-    // Constructor to map from Employee entity
+    // Constructor to map from Employee entity (Keep this custom one)
     public EmployeeDTO(Employee employee) {
-        this.id = employee.getId();
-        this.fullName = employee.getFullName();
-        this.occupation = employee.getOccupation();
-        this.createdAt = employee.getCreatedAt();
+        this.id = employee.getId(); // Assumes Employee has @Getter
+        this.fullName = employee.getFullName(); // Assumes Employee has @Getter
+        this.occupation = employee.getOccupation(); // Assumes Employee has @Getter
+        this.createdAt = employee.getCreatedAt(); // Assumes Employee has @Getter
         // Ensure seats are initialized before mapping
-        if (employee.getSeats() != null) {
+        if (employee.getSeats() != null) { // Assumes Employee has @Getter
             this.seatIds =
-                    employee.getSeats().stream().map(Seat::getId).collect(Collectors.toSet());
+                    employee.getSeats().stream()
+                            .map(Seat::getId) // Assumes Seat has @Getter
+                            .collect(Collectors.toSet());
         } else {
             this.seatIds = Set.of(); // Or null, depending on desired representation
         }
     }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public String getOccupation() {
-        return occupation;
-    }
-
-    public void setOccupation(String occupation) {
-        this.occupation = occupation;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Set<Long> getSeatIds() {
-        return seatIds;
-    }
-
-    public void setSeatIds(Set<Long> seatIds) {
-        this.seatIds = seatIds;
-    }
+    // Getters and Setters removed (using @Getter, @Setter)
 }
