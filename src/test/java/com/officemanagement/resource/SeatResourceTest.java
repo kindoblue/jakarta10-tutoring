@@ -185,25 +185,26 @@ public class SeatResourceTest extends BaseResourceTest {
         // Setup Floor, Room, Seat
         final Holder<Long> roomIdHolder = new Holder<>();
         final Holder<Long> seatIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("API Floor - UpdSeat");
-                    floor.setFloorNumber(204);
-                    testEntityManager.persist(floor);
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("API Room - UpdSeat");
-                    room.setRoomNumber("R-UpdS");
-                    room.setFloor(floor);
-                    testEntityManager.persist(room);
-                    Seat seat = new Seat();
-                    seat.setSeatNumber("OrigS1");
-                    seat.setRoom(room);
-                    testEntityManager.persist(seat);
-                    testEntityManager.flush();
-                    roomIdHolder.value = room.getId();
-                    seatIdHolder.value = seat.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("API Floor - UpdSeat");
+                            floor.setFloorNumber(204);
+                            testEntityManager.persist(floor);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("API Room - UpdSeat");
+                            room.setRoomNumber("R-UpdS");
+                            room.setFloor(floor);
+                            testEntityManager.persist(room);
+                            Seat seat = new Seat();
+                            seat.setSeatNumber("OrigS1");
+                            seat.setRoom(room);
+                            testEntityManager.persist(seat);
+                            testEntityManager.flush();
+                            roomIdHolder.value = room.getId();
+                            seatIdHolder.value = seat.getId();
+                        });
         Long roomId = roomIdHolder.value;
         Long seatId = seatIdHolder.value;
         assertNotNull(roomId);
