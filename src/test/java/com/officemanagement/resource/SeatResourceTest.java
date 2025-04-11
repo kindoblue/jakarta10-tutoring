@@ -32,20 +32,21 @@ public class SeatResourceTest extends BaseResourceTest {
     public void testCreateAndGetSeat() {
         // 1. Setup Floor and Room using QuarkusTransaction
         final Holder<Long> roomIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("API Test Floor - Seat");
-                    floor.setFloorNumber(201);
-                    testEntityManager.persist(floor);
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("API Test Room - Seat");
-                    room.setRoomNumber("SRoom1");
-                    room.setFloor(floor);
-                    testEntityManager.persist(room);
-                    testEntityManager.flush();
-                    roomIdHolder.value = room.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("API Test Floor - Seat");
+                            floor.setFloorNumber(201);
+                            testEntityManager.persist(floor);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("API Test Room - Seat");
+                            room.setRoomNumber("SRoom1");
+                            room.setFloor(floor);
+                            testEntityManager.persist(room);
+                            testEntityManager.flush();
+                            roomIdHolder.value = room.getId();
+                        });
         Long roomId = roomIdHolder.value;
         assertNotNull(roomId);
 
@@ -130,20 +131,21 @@ public class SeatResourceTest extends BaseResourceTest {
     public void testCreateSeatDuplicateNumberInRoom() {
         // Setup Floor and Room
         final Holder<Long> roomIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("API Test Floor - DupSeat");
-                    floor.setFloorNumber(203);
-                    testEntityManager.persist(floor);
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("API Test Room - DupSeat");
-                    room.setRoomNumber("R-DupS");
-                    room.setFloor(floor);
-                    testEntityManager.persist(room);
-                    testEntityManager.flush();
-                    roomIdHolder.value = room.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("API Test Floor - DupSeat");
+                            floor.setFloorNumber(203);
+                            testEntityManager.persist(floor);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("API Test Room - DupSeat");
+                            room.setRoomNumber("R-DupS");
+                            room.setFloor(floor);
+                            testEntityManager.persist(room);
+                            testEntityManager.flush();
+                            roomIdHolder.value = room.getId();
+                        });
         Long roomId = roomIdHolder.value;
         assertNotNull(roomId);
 
@@ -238,24 +240,25 @@ public class SeatResourceTest extends BaseResourceTest {
     public void testDeleteSeat() {
         // Setup Floor, Room, Seat
         final Holder<Long> seatIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("API Floor - DelSeat");
-                    floor.setFloorNumber(205);
-                    testEntityManager.persist(floor);
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("API Room - DelSeat");
-                    room.setRoomNumber("R-DelS");
-                    room.setFloor(floor);
-                    testEntityManager.persist(room);
-                    Seat seat = new Seat();
-                    seat.setSeatNumber("DeleteS1");
-                    seat.setRoom(room);
-                    testEntityManager.persist(seat);
-                    testEntityManager.flush();
-                    seatIdHolder.value = seat.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("API Floor - DelSeat");
+                            floor.setFloorNumber(205);
+                            testEntityManager.persist(floor);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("API Room - DelSeat");
+                            room.setRoomNumber("R-DelS");
+                            room.setFloor(floor);
+                            testEntityManager.persist(room);
+                            Seat seat = new Seat();
+                            seat.setSeatNumber("DeleteS1");
+                            seat.setRoom(room);
+                            testEntityManager.persist(seat);
+                            testEntityManager.flush();
+                            seatIdHolder.value = seat.getId();
+                        });
         Long seatId = seatIdHolder.value;
         assertNotNull(seatId);
 
@@ -303,37 +306,39 @@ public class SeatResourceTest extends BaseResourceTest {
     public void testDeleteSeatWithEmployeesAssigned() {
         // Setup Floor, Room, Seat, Employee, Assignment
         final Holder<Long> seatIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("API Floor - DelAssignSeat");
-                    floor.setFloorNumber(206);
-                    testEntityManager.persist(floor);
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("API Room - DelAssignSeat");
-                    room.setRoomNumber("R-DelAS");
-                    room.setFloor(floor);
-                    testEntityManager.persist(room);
-                    Seat seat = new Seat();
-                    seat.setSeatNumber("DelS-Assign");
-                    seat.setRoom(room);
-                    testEntityManager.persist(seat);
-                    Employee employee = new Employee();
-                    employee.setFullName("Assigned Emp");
-                    employee.setOccupation("Worker");
-                    testEntityManager.persist(employee);
-                    testEntityManager.flush(); // Flush to get IDs
-                    // Fetch the managed employee to associate the seat
-                    Employee managedEmployee =
-                            testEntityManager.find(Employee.class, employee.getId());
-                    Seat managedSeat = testEntityManager.find(Seat.class, seat.getId());
-                    if (managedEmployee != null && managedSeat != null) {
-                        managedEmployee.addSeat(managedSeat); // Associate employee with seat
-                        testEntityManager.merge(managedEmployee); // Persist association
-                    }
-                    testEntityManager.flush();
-                    seatIdHolder.value = seat.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("API Floor - DelAssignSeat");
+                            floor.setFloorNumber(206);
+                            testEntityManager.persist(floor);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("API Room - DelAssignSeat");
+                            room.setRoomNumber("R-DelAS");
+                            room.setFloor(floor);
+                            testEntityManager.persist(room);
+                            Seat seat = new Seat();
+                            seat.setSeatNumber("DelS-Assign");
+                            seat.setRoom(room);
+                            testEntityManager.persist(seat);
+                            Employee employee = new Employee();
+                            employee.setFullName("Assigned Emp");
+                            employee.setOccupation("Worker");
+                            testEntityManager.persist(employee);
+                            testEntityManager.flush(); // Flush to get IDs
+                            // Fetch the managed employee to associate the seat
+                            Employee managedEmployee =
+                                    testEntityManager.find(Employee.class, employee.getId());
+                            Seat managedSeat = testEntityManager.find(Seat.class, seat.getId());
+                            if (managedEmployee != null && managedSeat != null) {
+                                managedEmployee.addSeat(
+                                        managedSeat); // Associate employee with seat
+                                testEntityManager.merge(managedEmployee); // Persist association
+                            }
+                            testEntityManager.flush();
+                            seatIdHolder.value = seat.getId();
+                        });
         Long seatId = seatIdHolder.value;
         assertNotNull(seatId);
 

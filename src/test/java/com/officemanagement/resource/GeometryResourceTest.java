@@ -34,44 +34,45 @@ public class GeometryResourceTest extends BaseResourceTest {
     }
 
     SetupResult createTestRoomWithSeat() {
-        return QuarkusTransaction.call(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Geometry Test Floor");
-                    floor.setFloorNumber(100);
-                    testEntityManager.persist(floor);
+        return QuarkusTransaction.requiringNew()
+                .call(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Geometry Test Floor");
+                            floor.setFloorNumber(100);
+                            testEntityManager.persist(floor);
 
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("Geometry Test Room");
-                    room.setRoomNumber("G101");
-                    room.setFloor(floor);
-                    room.setX(1.0f);
-                    room.setY(2.0f);
-                    testEntityManager.persist(room);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("Geometry Test Room");
+                            room.setRoomNumber("G101");
+                            room.setFloor(floor);
+                            room.setX(1.0f);
+                            room.setY(2.0f);
+                            testEntityManager.persist(room);
 
-                    Seat seat = new Seat();
-                    seat.setSeatNumber("GS1");
-                    seat.setRoom(room);
-                    seat.setX(0.5f);
-                    seat.setY(0.6f);
-                    testEntityManager.persist(seat);
+                            Seat seat = new Seat();
+                            seat.setSeatNumber("GS1");
+                            seat.setRoom(room);
+                            seat.setX(0.5f);
+                            seat.setY(0.6f);
+                            testEntityManager.persist(seat);
 
-                    testEntityManager.flush();
+                            testEntityManager.flush();
 
-                    SetupResult result = new SetupResult();
-                    result.floorId = floor.getId();
-                    result.roomId = room.getId();
-                    result.seatId = seat.getId();
-                    result.initialRoomX = room.getX();
-                    result.initialRoomY = room.getY();
-                    result.initialSeatX = seat.getX();
-                    result.initialSeatY = seat.getY();
+                            SetupResult result = new SetupResult();
+                            result.floorId = floor.getId();
+                            result.roomId = room.getId();
+                            result.seatId = seat.getId();
+                            result.initialRoomX = room.getX();
+                            result.initialRoomY = room.getY();
+                            result.initialSeatX = seat.getX();
+                            result.initialSeatY = seat.getY();
 
-                    assertNotNull(result.floorId, "Floor ID missing");
-                    assertNotNull(result.roomId, "Room ID missing");
-                    assertNotNull(result.seatId, "Seat ID missing");
-                    return result;
-                });
+                            assertNotNull(result.floorId, "Floor ID missing");
+                            assertNotNull(result.roomId, "Room ID missing");
+                            assertNotNull(result.seatId, "Seat ID missing");
+                            return result;
+                        });
     }
 
     @Test

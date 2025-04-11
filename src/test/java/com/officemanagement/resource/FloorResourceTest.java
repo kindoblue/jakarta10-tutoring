@@ -81,13 +81,14 @@ public class FloorResourceTest extends BaseResourceTest {
     @Test
     public void testCreateFloorDuplicateNumber() {
         // Create first floor in transaction
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor1 = new Floor();
-                    floor1.setName("Floor One Dup");
-                    floor1.setFloorNumber(102);
-                    testEntityManager.persist(floor1);
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor1 = new Floor();
+                            floor1.setName("Floor One Dup");
+                            floor1.setFloorNumber(102);
+                            testEntityManager.persist(floor1);
+                        });
 
         // Try creating another with the same number via API
         Floor floor2Payload = new Floor();
@@ -107,15 +108,16 @@ public class FloorResourceTest extends BaseResourceTest {
     public void testUpdateFloor() {
         // Create a floor in transaction
         final Holder<Long> floorIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Original Name Upd");
-                    floor.setFloorNumber(103);
-                    testEntityManager.persist(floor);
-                    testEntityManager.flush();
-                    floorIdHolder.value = floor.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Original Name Upd");
+                            floor.setFloorNumber(103);
+                            testEntityManager.persist(floor);
+                            testEntityManager.flush();
+                            floorIdHolder.value = floor.getId();
+                        });
         Long floorId = floorIdHolder.value;
         assertNotNull(floorId);
 
@@ -156,20 +158,21 @@ public class FloorResourceTest extends BaseResourceTest {
         // Create floors in transaction
         final Holder<Long> floor1IdHolder = new Holder<>();
         final Holder<Long> floor2IdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor1 = new Floor();
-                    floor1.setName("Floor One UpdDup");
-                    floor1.setFloorNumber(105);
-                    testEntityManager.persist(floor1);
-                    Floor floor2 = new Floor();
-                    floor2.setName("Floor Two UpdDup");
-                    floor2.setFloorNumber(106);
-                    testEntityManager.persist(floor2);
-                    testEntityManager.flush();
-                    floor1IdHolder.value = floor1.getId();
-                    floor2IdHolder.value = floor2.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor1 = new Floor();
+                            floor1.setName("Floor One UpdDup");
+                            floor1.setFloorNumber(105);
+                            testEntityManager.persist(floor1);
+                            Floor floor2 = new Floor();
+                            floor2.setName("Floor Two UpdDup");
+                            floor2.setFloorNumber(106);
+                            testEntityManager.persist(floor2);
+                            testEntityManager.flush();
+                            floor1IdHolder.value = floor1.getId();
+                            floor2IdHolder.value = floor2.getId();
+                        });
         Long floor1Id = floor1IdHolder.value;
         Long floor2Id = floor2IdHolder.value;
         assertNotNull(floor1Id);
@@ -193,15 +196,16 @@ public class FloorResourceTest extends BaseResourceTest {
     public void testDeleteFloor() {
         // Create a floor in transaction
         final Holder<Long> floorIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("To Be Deleted");
-                    floor.setFloorNumber(107);
-                    testEntityManager.persist(floor);
-                    testEntityManager.flush();
-                    floorIdHolder.value = floor.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("To Be Deleted");
+                            floor.setFloorNumber(107);
+                            testEntityManager.persist(floor);
+                            testEntityManager.flush();
+                            floorIdHolder.value = floor.getId();
+                        });
         Long floorId = floorIdHolder.value;
         assertNotNull(floorId);
 
@@ -223,7 +227,8 @@ public class FloorResourceTest extends BaseResourceTest {
 
         // Verify it's gone via EntityManager (in new transaction)
         Floor deletedFloor =
-                QuarkusTransaction.call(() -> testEntityManager.find(Floor.class, floorId));
+                QuarkusTransaction.requiringNew()
+                        .call(() -> testEntityManager.find(Floor.class, floorId));
         assertNull(deletedFloor);
     }
 
@@ -239,20 +244,21 @@ public class FloorResourceTest extends BaseResourceTest {
     public void testDeleteFloorWithRooms() {
         // Create floor and room in transaction
         final Holder<Long> floorIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Floor With Room Del");
-                    floor.setFloorNumber(108);
-                    testEntityManager.persist(floor);
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("Test Room Del");
-                    room.setRoomNumber("R1Del");
-                    room.setFloor(floor);
-                    testEntityManager.persist(room);
-                    testEntityManager.flush();
-                    floorIdHolder.value = floor.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Floor With Room Del");
+                            floor.setFloorNumber(108);
+                            testEntityManager.persist(floor);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("Test Room Del");
+                            room.setRoomNumber("R1Del");
+                            room.setFloor(floor);
+                            testEntityManager.persist(room);
+                            testEntityManager.flush();
+                            floorIdHolder.value = floor.getId();
+                        });
         Long floorId = floorIdHolder.value;
         assertNotNull(floorId);
 
@@ -269,15 +275,16 @@ public class FloorResourceTest extends BaseResourceTest {
     public void testCreateAndGetFloorPlan() {
         // Create floor in transaction
         final Holder<Long> floorIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Floor With Plan CG");
-                    floor.setFloorNumber(109);
-                    testEntityManager.persist(floor);
-                    testEntityManager.flush();
-                    floorIdHolder.value = floor.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Floor With Plan CG");
+                            floor.setFloorNumber(109);
+                            testEntityManager.persist(floor);
+                            testEntityManager.flush();
+                            floorIdHolder.value = floor.getId();
+                        });
         Long floorId = floorIdHolder.value;
         assertNotNull(floorId);
 
@@ -320,19 +327,20 @@ public class FloorResourceTest extends BaseResourceTest {
         // Create floor and initial plan in transaction
         final Holder<Long> floorIdHolder = new Holder<>();
         String initialSvg = "<svg><circle cx=\"50\" cy=\"50\" r=\"40\"/></svg>";
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Floor Update Plan");
-                    floor.setFloorNumber(110);
-                    testEntityManager.persist(floor);
-                    FloorPlanimetry planimetry = new FloorPlanimetry();
-                    planimetry.setFloor(floor);
-                    planimetry.setPlanimetry(initialSvg);
-                    testEntityManager.persist(planimetry);
-                    testEntityManager.flush();
-                    floorIdHolder.value = floor.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Floor Update Plan");
+                            floor.setFloorNumber(110);
+                            testEntityManager.persist(floor);
+                            FloorPlanimetry planimetry = new FloorPlanimetry();
+                            planimetry.setFloor(floor);
+                            planimetry.setPlanimetry(initialSvg);
+                            testEntityManager.persist(planimetry);
+                            testEntityManager.flush();
+                            floorIdHolder.value = floor.getId();
+                        });
         Long floorId = floorIdHolder.value;
         assertNotNull(floorId);
 
@@ -373,15 +381,16 @@ public class FloorResourceTest extends BaseResourceTest {
     public void testGetFloorPlanNoPlanExists() {
         // Create floor without plan in transaction
         final Holder<Long> floorIdHolder = new Holder<>();
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Floor No Plan");
-                    floor.setFloorNumber(111);
-                    testEntityManager.persist(floor);
-                    testEntityManager.flush();
-                    floorIdHolder.value = floor.getId();
-                });
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Floor No Plan");
+                            floor.setFloorNumber(111);
+                            testEntityManager.persist(floor);
+                            testEntityManager.flush();
+                            floorIdHolder.value = floor.getId();
+                        });
         Long floorId = floorIdHolder.value;
         assertNotNull(floorId);
 

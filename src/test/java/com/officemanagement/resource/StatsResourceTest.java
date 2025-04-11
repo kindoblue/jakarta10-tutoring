@@ -51,31 +51,32 @@ public class StatsResourceTest {
                 .body("totalSeats", equalTo(0));
 
         // Add some data within a transaction
-        QuarkusTransaction.run(
-                () -> {
-                    Floor floor = new Floor();
-                    floor.setName("Stats Floor");
-                    floor.setFloorNumber(30);
-                    testEntityManager.persist(floor);
+        QuarkusTransaction.requiringNew()
+                .run(
+                        () -> {
+                            Floor floor = new Floor();
+                            floor.setName("Stats Floor");
+                            floor.setFloorNumber(30);
+                            testEntityManager.persist(floor);
 
-                    OfficeRoom room = new OfficeRoom();
-                    room.setName("Stats Room");
-                    room.setFloor(floor);
-                    room.setRoomNumber("StatR1");
-                    testEntityManager.persist(room);
+                            OfficeRoom room = new OfficeRoom();
+                            room.setName("Stats Room");
+                            room.setFloor(floor);
+                            room.setRoomNumber("StatR1");
+                            testEntityManager.persist(room);
 
-                    Seat seat = new Seat();
-                    seat.setSeatNumber("StatS1");
-                    seat.setRoom(room);
-                    testEntityManager.persist(seat);
+                            Seat seat = new Seat();
+                            seat.setSeatNumber("StatS1");
+                            seat.setRoom(room);
+                            testEntityManager.persist(seat);
 
-                    Employee employee = new Employee();
-                    employee.setFullName("Stats Employee");
-                    employee.setOccupation("Stat Worker");
-                    employee.addSeat(seat);
-                    testEntityManager.persist(employee);
-                    // No flush/clear needed inside QuarkusTransaction
-                });
+                            Employee employee = new Employee();
+                            employee.setFullName("Stats Employee");
+                            employee.setOccupation("Stat Worker");
+                            employee.addSeat(seat);
+                            testEntityManager.persist(employee);
+                            // No flush/clear needed inside QuarkusTransaction
+                        });
 
         // Verify updated stats
         given().when()
