@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .endpoint {
+            background-color: #f5f5f5;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #444;
+            margin-top: 30px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .method {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .get { background-color: #61affe; color: white; }
+        .post { background-color: #49cc90; color: white; }
+        .put { background-color: #fca130; color: white; }
+        .delete { background-color: #f93e3e; color: white; }
+        
+        pre {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .help-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        .command-description {
+            color: #666;
+            margin: 5px 0 15px 0;
+        }
+        .curl-example {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .curl-example code {
+            display: block;
+            white-space: pre-wrap;
+            padding: 10px;
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Office Management System API</h1>
+    
+    <h2>Statistics</h2>
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/stats">/api/stats</a>
+        <p>Returns overall statistics including total employees, floors, offices, and seats.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/stats</code>
+        </div>
+    </div>
+
+    <h2>Floors</h2>
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/floors">/api/floors</a>
+        <p>Returns a list of all floors.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/floors</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/floors/{id}">/api/floors/{id}</a>
+        <p>Returns details of a specific floor including its rooms and seats.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/floors/1</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <a href="/api/floors">/api/floors</a>
+        <p>Creates a new floor.</p>
+        <pre>{
+    "name": "First Floor",
+    "floorNumber": 1
+}</pre>
+        <div class="curl-example">
+            <code>curl -X POST http://localhost:8080/api/floors \
+    -H "Content-Type: application/json" \
+    -d '{"name": "First Floor", "floorNumber": 1}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method put">PUT</span>
+        <a href="/api/floors/{id}">/api/floors/{id}</a>
+        <p>Updates an existing floor.</p>
+        <pre>{
+    "name": "Updated Floor Name",
+    "floorNumber": 2
+}</pre>
+        <div class="curl-example">
+            <code>curl -X PUT http://localhost:8080/api/floors/1 \
+    -H "Content-Type: application/json" \
+    -d '{"name": "Updated Floor Name", "floorNumber": 2}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method delete">DELETE</span>
+        <a href="/api/floors/{id}">/api/floors/{id}</a>
+        <p>Deletes a floor. Cannot delete floors that have rooms.</p>
+        <div class="curl-example">
+            <code>curl -X DELETE http://localhost:8080/api/floors/1</code>
+        </div>
+    </div>
+
+    <h2>Rooms</h2>
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/rooms/{id}">/api/rooms/{id}</a>
+        <p>Returns details of a specific room including its seats.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/rooms/1</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/rooms/{id}/seats">/api/rooms/{id}/seats</a>
+        <p>Returns all seats in a specific room.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/rooms/1/seats</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <a href="/api/rooms">/api/rooms</a>
+        <p>Creates a new room.</p>
+        <pre>{
+    "name": "Conference Room",
+    "roomNumber": "101",
+    "floor": {"id": 1}
+}</pre>
+        <div class="curl-example">
+            <code>curl -X POST http://localhost:8080/api/rooms \
+    -H "Content-Type: application/json" \
+    -d '{"name": "Conference Room", "roomNumber": "101", "floor": {"id": 1}}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method put">PUT</span>
+        <a href="/api/rooms/{id}">/api/rooms/{id}</a>
+        <p>Updates an existing room.</p>
+        <pre>{
+    "name": "Updated Room Name",
+    "roomNumber": "102",
+    "floor": {"id": 1}
+}</pre>
+        <div class="curl-example">
+            <code>curl -X PUT http://localhost:8080/api/rooms/1 \
+    -H "Content-Type: application/json" \
+    -d '{"name": "Updated Room Name", "roomNumber": "102", "floor": {"id": 1}}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method delete">DELETE</span>
+        <a href="/api/rooms/{id}">/api/rooms/{id}</a>
+        <p>Deletes a room. Cannot delete rooms that have seats.</p>
+        <div class="curl-example">
+            <code>curl -X DELETE http://localhost:8080/api/rooms/1</code>
+        </div>
+    </div>
+
+    <h2>Seats</h2>
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/seats/{id}">/api/seats/{id}</a>
+        <p>Returns details of a specific seat.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/seats/1</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <a href="/api/seats">/api/seats</a>
+        <p>Creates a new seat.</p>
+        <pre>{
+    "seatNumber": "101-A",
+    "room": {"id": 1},
+    "occupied": false
+}</pre>
+        <div class="curl-example">
+            <code>curl -X POST http://localhost:8080/api/seats \
+    -H "Content-Type: application/json" \
+    -d '{"seatNumber": "101-A", "room": {"id": 1}, "occupied": false}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method put">PUT</span>
+        <a href="/api/seats/{id}">/api/seats/{id}</a>
+        <p>Updates an existing seat.</p>
+        <pre>{
+    "seatNumber": "101-B",
+    "room": {"id": 1},
+    "occupied": true
+}</pre>
+        <div class="curl-example">
+            <code>curl -X PUT http://localhost:8080/api/seats/1 \
+    -H "Content-Type: application/json" \
+    -d '{"seatNumber": "101-B", "room": {"id": 1}, "occupied": true}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method delete">DELETE</span>
+        <a href="/api/seats/{id}">/api/seats/{id}</a>
+        <p>Deletes a seat. Cannot delete seats that are assigned to employees.</p>
+        <div class="curl-example">
+            <code>curl -X DELETE http://localhost:8080/api/seats/1</code>
+        </div>
+    </div>
+
+    <h2>Employees</h2>
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/employees/{id}">/api/employees/{id}</a>
+        <p>Returns details of a specific employee including their assigned seats.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/employees/1</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/employees/{id}/seats">/api/employees/{id}/seats</a>
+        <p>Returns all seats assigned to a specific employee.</p>
+        <div class="curl-example">
+            <code>curl -X GET http://localhost:8080/api/employees/1/seats</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <a href="/api/employees/search">/api/employees/search</a>
+        <p>Search employees with pagination. Query parameters: search, page, size.</p>
+        <pre>Example: /api/employees/search?search=john&page=0&size=10</pre>
+        <div class="curl-example">
+            <code>curl -X GET "http://localhost:8080/api/employees/search?search=john&page=0&size=10"</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <a href="/api/employees">/api/employees</a>
+        <p>Creates a new employee.</p>
+        <pre>{
+    "fullName": "John Doe",
+    "occupation": "Software Engineer"
+}</pre>
+        <div class="curl-example">
+            <code>curl -X POST http://localhost:8080/api/employees \
+    -H "Content-Type: application/json" \
+    -d '{"fullName": "John Doe", "occupation": "Software Engineer"}'</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method put">PUT</span>
+        <a href="/api/employees/{id}/assign-seat/{seatId}">/api/employees/{id}/assign-seat/{seatId}</a>
+        <p>Assigns a seat to an employee.</p>
+        <div class="curl-example">
+            <code>curl -X PUT http://localhost:8080/api/employees/1/assign-seat/2</code>
+        </div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method delete">DELETE</span>
+        <a href="/api/employees/{employeeId}/unassign-seat/{seatId}">/api/employees/{employeeId}/unassign-seat/{seatId}</a>
+        <p>Unassigns a seat from an employee.</p>
+        <div class="curl-example">
+            <code>curl -X DELETE http://localhost:8080/api/employees/1/unassign-seat/2</code>
+        </div>
+    </div>
+
+    <div class="help-section">
+        <h2>API Usage Notes</h2>
+        <ul>
+            <li>All endpoints are prefixed with <code>/api</code></li>
+            <li>All requests and responses use JSON format</li>
+            <li>Dates are in ISO 8601 format</li>
+            <li>Pagination parameters:
+                <ul>
+                    <li>page: 0-based page number (default: 0)</li>
+                    <li>size: number of items per page (default: 10, max: 100)</li>
+                </ul>
+            </li>
+            <li>Common HTTP status codes:
+                <ul>
+                    <li>200: Success</li>
+                    <li>201: Created</li>
+                    <li>400: Bad Request</li>
+                    <li>404: Not Found</li>
+                    <li>409: Conflict (e.g., duplicate entries)</li>
+                    <li>500: Internal Server Error</li>
+                </ul>
+            </li>
+            <li>For testing with curl:
+                <ul>
+                    <li>Replace IDs (1, 2, etc.) with actual IDs from your system</li>
+                    <li>The server must be running at localhost:8080</li>
+                    <li>For Windows PowerShell, replace single quotes with double quotes and escape inner quotes</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        // Helper function to prompt for ID and view resource
+        function viewResource(type, endpoint) {
+            const id = prompt(`Enter ${type} ID:`);
+            if (id) {
+                window.open(`/api/${endpoint}/${id}`, '_blank');
+            }
+        }
+
+        // Add click handlers to resource links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update floor link
+            const floorLink = document.querySelector('a[href="/api/floors/{id}"]');
+            floorLink.href = 'javascript:void(0)';
+            floorLink.onclick = () => viewResource('Floor', 'floors');
+
+            // Update room link
+            const roomLink = document.querySelector('a[href="/api/rooms/{id}"]');
+            roomLink.href = 'javascript:void(0)';
+            roomLink.onclick = () => viewResource('Room', 'rooms');
+
+            // Update seat link
+            const seatLink = document.querySelector('a[href="/api/seats/{id}"]');
+            seatLink.href = 'javascript:void(0)';
+            seatLink.onclick = () => viewResource('Seat', 'seats');
+
+            // Update employee link
+            const employeeLink = document.querySelector('a[href="/api/employees/{id}"]');
+            employeeLink.href = 'javascript:void(0)';
+            employeeLink.onclick = () => viewResource('Employee', 'employees');
+
+            // Update employee seats link
+            const employeeSeatsLink = document.querySelector('a[href="/api/employees/{id}/seats"]');
+            employeeSeatsLink.href = 'javascript:void(0)';
+            employeeSeatsLink.onclick = () => viewResource('Employee', 'employees');
+
+            // Update room seats link
+            const roomSeatsLink = document.querySelector('a[href="/api/rooms/{id}/seats"]');
+            roomSeatsLink.href = 'javascript:void(0)';
+            roomSeatsLink.onclick = () => viewResource('Room', 'rooms');
+        });
+    </script>
+</body>
+</html> 
