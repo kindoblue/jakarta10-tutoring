@@ -28,8 +28,6 @@ public class GeometryResourceTest extends BaseResourceTest {
         Long roomId;
         Long seatId;
         Float initialRoomX;
-        Float initialRoomY;
-        Float initialSeatX;
         Float initialSeatY;
     }
 
@@ -64,8 +62,6 @@ public class GeometryResourceTest extends BaseResourceTest {
                             result.roomId = room.getId();
                             result.seatId = seat.getId();
                             result.initialRoomX = room.getX();
-                            result.initialRoomY = room.getY();
-                            result.initialSeatX = seat.getX();
                             result.initialSeatY = seat.getY();
 
                             assertNotNull(result.floorId, "Floor ID missing");
