@@ -31,15 +31,6 @@ public abstract class BaseResourceTest {
                 .executeUpdate(); // Assuming this exists
         entityManager.createQuery("DELETE FROM Floor f").executeUpdate();
 
-        // Reset sequences if needed (depends on DB and strategy)
-        // Example for PostgreSQL:
-        // entityManager.createNativeQuery("ALTER SEQUENCE employee_id_seq RESTART WITH
-        // 1").executeUpdate();
-        // entityManager.createNativeQuery("ALTER SEQUENCE seat_id_seq RESTART WITH
-        // 1").executeUpdate();
-        // ... add others
-        // entityManager.flush(); // Removed
-        // entityManager.clear(); // Removed
     }
 
     // Utility method to get Response.Status constants
@@ -47,5 +38,4 @@ public abstract class BaseResourceTest {
         return Response.Status.fromStatusCode(statusCode);
     }
 
-    // Common test setup logic can go here if needed
 }
