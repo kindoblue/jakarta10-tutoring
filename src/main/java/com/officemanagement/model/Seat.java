@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import org.hibernate.annotations.CreationTimestamp;
 import java.util.Set;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "seats")
@@ -28,7 +28,7 @@ public class Seat {
     @Column(name = "x")
     private Float x = 0f;
 
-    @Column(name = "y") 
+    @Column(name = "y")
     private Float y = 0f;
 
     @Column(name = "width")
@@ -36,7 +36,7 @@ public class Seat {
 
     @Column(name = "height")
     private Float height = 100f;
-    
+
     @Column(name = "rotation")
     private Float rotation = 0f;
 
@@ -134,4 +134,4 @@ public class Seat {
     public void setEmployees(Set<Employee> employees) {
         this.employees = employees;
     }
-} 
+}

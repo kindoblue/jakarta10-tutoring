@@ -1,7 +1,5 @@
 package com.officemanagement.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -30,14 +28,13 @@ public class Floor {
     @OneToMany(mappedBy = "floor", fetch = FetchType.EAGER)
     @JsonIgnoreProperties("floor")
     private Set<OfficeRoom> rooms = new HashSet<>();
-    
+
     @OneToOne(mappedBy = "floor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties("floor")
     private FloorPlanimetry planimetryData;
 
     // Default constructor required by JPA/Hibernate
-    public Floor() {
-    }
+    public Floor() {}
 
     public Floor(Long id, String name, Integer level) {
         this.id = id;
@@ -70,39 +67,35 @@ public class Floor {
     }
 
     /**
-     * Get planimetry from the associated FloorPlanimetry entity
-     * This maintains backwards compatibility with existing code
+     * Get planimetry from the associated FloorPlanimetry entity This maintains backwards
+     * compatibility with existing code
      */
     public String getPlanimetry() {
         return planimetryData != null ? planimetryData.getPlanimetry() : null;
     }
 
     /**
-     * Set planimetry by creating or updating the associated FloorPlanimetry entity
-     * This maintains backwards compatibility with existing code
+     * Set planimetry by creating or updating the associated FloorPlanimetry entity This maintains
+     * backwards compatibility with existing code
      */
     public void setPlanimetry(String planimetry) {
         if (planimetry == null) {
             return;
         }
-        
+
         if (planimetryData == null) {
             planimetryData = new FloorPlanimetry(this, planimetry);
         } else {
             planimetryData.setPlanimetry(planimetry);
         }
     }
-    
-    /**
-     * Get the FloorPlanimetry entity associated with this floor
-     */
+
+    /** Get the FloorPlanimetry entity associated with this floor */
     public FloorPlanimetry getPlanimetryData() {
         return planimetryData;
     }
-    
-    /**
-     * Set the FloorPlanimetry entity associated with this floor
-     */
+
+    /** Set the FloorPlanimetry entity associated with this floor */
     public void setPlanimetryData(FloorPlanimetry planimetryData) {
         this.planimetryData = planimetryData;
         if (planimetryData != null) {
@@ -125,4 +118,4 @@ public class Floor {
     public void setRooms(Set<OfficeRoom> rooms) {
         this.rooms = rooms;
     }
-} 
+}

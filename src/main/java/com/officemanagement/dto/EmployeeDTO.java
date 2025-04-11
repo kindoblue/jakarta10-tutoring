@@ -1,14 +1,12 @@
 package com.officemanagement.dto;
 
+import com.officemanagement.model.Employee;
+import com.officemanagement.model.Seat; // Ensure Seat import if needed
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
-import com.officemanagement.model.Employee;
-import com.officemanagement.model.Seat; // Ensure Seat import if needed
 
-/**
- * Data Transfer Object for Employee entities.
- */
+/** Data Transfer Object for Employee entities. */
 public class EmployeeDTO {
 
     private Long id;
@@ -18,8 +16,7 @@ public class EmployeeDTO {
     private Set<Long> seatIds; // Represent seats by their IDs
 
     // Default constructor (required by Jackson/JAX-RS)
-    public EmployeeDTO() {
-    }
+    public EmployeeDTO() {}
 
     // Constructor to map from Employee entity
     public EmployeeDTO(Employee employee) {
@@ -29,9 +26,8 @@ public class EmployeeDTO {
         this.createdAt = employee.getCreatedAt();
         // Ensure seats are initialized before mapping
         if (employee.getSeats() != null) {
-             this.seatIds = employee.getSeats().stream()
-                                     .map(Seat::getId)
-                                     .collect(Collectors.toSet());
+            this.seatIds =
+                    employee.getSeats().stream().map(Seat::getId).collect(Collectors.toSet());
         } else {
             this.seatIds = Set.of(); // Or null, depending on desired representation
         }
@@ -77,4 +73,4 @@ public class EmployeeDTO {
     public void setSeatIds(Set<Long> seatIds) {
         this.seatIds = seatIds;
     }
-} 
+}

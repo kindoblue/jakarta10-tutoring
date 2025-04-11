@@ -22,10 +22,9 @@ public class Employee {
 
     @ManyToMany
     @JoinTable(
-        name = "employee_seat_assignments",
-        joinColumns = @JoinColumn(name = "employee_id"),
-        inverseJoinColumns = @JoinColumn(name = "seat_id")
-    )
+            name = "employee_seat_assignments",
+            joinColumns = @JoinColumn(name = "employee_id"),
+            inverseJoinColumns = @JoinColumn(name = "seat_id"))
     @JsonIgnoreProperties("employees")
     private Set<Seat> seats = new HashSet<>();
 
@@ -85,4 +84,4 @@ public class Employee {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-} 
+}

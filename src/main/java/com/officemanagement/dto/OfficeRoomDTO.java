@@ -1,15 +1,12 @@
 package com.officemanagement.dto;
 
 import com.officemanagement.model.OfficeRoom;
-import com.officemanagement.model.Seat;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * Data Transfer Object for OfficeRoom entities.
- */
+/** Data Transfer Object for OfficeRoom entities. */
 public class OfficeRoomDTO {
 
     private Long id;
@@ -25,8 +22,7 @@ public class OfficeRoomDTO {
     private Set<Long> seatIds; // Include IDs of seats in this room
 
     // Default constructor
-    public OfficeRoomDTO() {
-    }
+    public OfficeRoomDTO() {}
 
     // Constructor to map from OfficeRoom entity
     public OfficeRoomDTO(OfficeRoom room) {
@@ -46,10 +42,12 @@ public class OfficeRoomDTO {
 
         if (room.getSeats() != null) {
             // Ensure seats collection is initialized if lazy
-            // Hibernate.initialize(room.getSeats()); // Potentially needed if called outside transaction
-            this.seatIds = room.getSeats().stream()
-                                .map(seat -> seat.getId()) // Assuming Seat has getId()
-                                .collect(Collectors.toSet());
+            // Hibernate.initialize(room.getSeats()); // Potentially needed if called outside
+            // transaction
+            this.seatIds =
+                    room.getSeats().stream()
+                            .map(seat -> seat.getId()) // Assuming Seat has getId()
+                            .collect(Collectors.toSet());
         } else {
             this.seatIds = Collections.emptySet();
         }
@@ -144,4 +142,4 @@ public class OfficeRoomDTO {
     public void setSeatIds(Set<Long> seatIds) {
         this.seatIds = seatIds;
     }
-} 
+}

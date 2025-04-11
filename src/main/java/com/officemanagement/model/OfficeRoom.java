@@ -1,8 +1,6 @@
 package com.officemanagement.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -13,7 +11,10 @@ import java.util.Set;
 public class OfficeRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "office_room_seq")
-    @SequenceGenerator(name = "office_room_seq", sequenceName = "office_room_seq", allocationSize = 1)
+    @SequenceGenerator(
+            name = "office_room_seq",
+            sequenceName = "office_room_seq",
+            allocationSize = 1)
     @Column(name = "id", nullable = false, updatable = false)
     private Long id;
 
@@ -125,4 +126,4 @@ public class OfficeRoom {
     public void setSeats(Set<Seat> seats) {
         this.seats = seats;
     }
-} 
+}

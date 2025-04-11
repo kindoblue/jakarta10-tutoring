@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * Entity representing floor planimetry (SVG floor plans)
- * Separated into a dedicated table for better performance and clean design
+ * Entity representing floor planimetry (SVG floor plans) Separated into a dedicated table for
+ * better performance and clean design
  */
 @Entity
 @Table(name = "floor_planimetry")
@@ -67,4 +67,4 @@ public class FloorPlanimetry {
     public void setLastUpdated(LocalDateTime lastUpdated) {
         this.lastUpdated = lastUpdated;
     }
-} 
+}

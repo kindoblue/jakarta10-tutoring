@@ -1,11 +1,11 @@
 package com.officemanagement.model;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class EmployeeTest {
     private Employee employee;
@@ -54,7 +54,7 @@ class EmployeeTest {
     void testAddSeat() {
         Seat seat = new Seat();
         employee.addSeat(seat);
-        
+
         assertTrue(employee.getSeats().contains(seat));
         assertTrue(seat.getEmployees().contains(employee));
     }
@@ -64,7 +64,7 @@ class EmployeeTest {
         Seat seat = new Seat();
         employee.addSeat(seat);
         employee.removeSeat(seat);
-        
+
         assertFalse(employee.getSeats().contains(seat));
         assertFalse(seat.getEmployees().contains(employee));
     }
@@ -81,4 +81,4 @@ class EmployeeTest {
         assertEquals(seats, employee.getSeats());
         assertEquals(2, employee.getSeats().size());
     }
-} 
+}
