@@ -7,9 +7,9 @@ services:
       - ..:/workspaces/tutoring:cached
     command: sleep infinity
     network_mode: service:db
-    user: devbox
+    user: jboss
     environment:
-      - USER=devbox
+      USER: jboss
     depends_on:
       db:
         condition: service_healthy

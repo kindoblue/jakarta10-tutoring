@@ -4,51 +4,89 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.officemanagement.dto.EmployeeDTO;
+import com.officemanagement.dto.FloorDTO;
+import com.officemanagement.dto.OfficeRoomDTO;
 import com.officemanagement.dto.SeatDTO;
 import com.officemanagement.model.Employee;
 import com.officemanagement.model.Floor;
 import com.officemanagement.model.OfficeRoom;
 import com.officemanagement.model.Seat;
-import io.quarkus.narayana.jta.QuarkusTransaction;
-import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for the SeatResource endpoints. */
-@QuarkusTest
 public class SeatResourceTest extends BaseResourceTest {
 
-    @Inject EntityManager testEntityManager;
-
-    // Helper class for IDs
+    // Helper class for IDs - might still be useful for API setup
     private static class Holder<T> {
         T value;
     }
 
+    // Helper method to create a Floor via API for setup
+    private Long createFloorForTest(String name, int number) {
+        Floor floorPayload = new Floor();
+        floorPayload.setName(name);
+        floorPayload.setFloorNumber(number);
+        FloorDTO createdFloorDto =
+                given().contentType(ContentType.JSON)
+                        .body(floorPayload)
+                        .when()
+                        .post("/floors")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(FloorDTO.class);
+        assertNotNull(createdFloorDto.getId());
+        return createdFloorDto.getId();
+    }
+
+    // Helper method to create a Room via API for setup
+    private Long createRoomForTest(String name, String number, Long floorId) {
+        OfficeRoom roomPayload = new OfficeRoom();
+        roomPayload.setName(name);
+        roomPayload.setRoomNumber(number);
+        Floor floorRef = new Floor();
+        floorRef.setId(floorId);
+        roomPayload.setFloor(floorRef);
+        OfficeRoomDTO createdRoomDto =
+                given().contentType(ContentType.JSON)
+                        .body(roomPayload)
+                        .when()
+                        .post("/rooms")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(OfficeRoomDTO.class);
+        assertNotNull(createdRoomDto.getId());
+        return createdRoomDto.getId();
+    }
+
+    // Helper method to create an Employee via API for setup
+    private Long createEmployeeForTest(String name, String occupation) {
+        Employee empPayload = new Employee();
+        empPayload.setFullName(name);
+        empPayload.setOccupation(occupation);
+        EmployeeDTO createdEmpDto =
+                given().contentType(ContentType.JSON)
+                        .body(empPayload)
+                        .when()
+                        .post("/employees")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(EmployeeDTO.class);
+        assertNotNull(createdEmpDto.getId());
+        return createdEmpDto.getId();
+    }
+
     @Test
     public void testCreateAndGetSeat() {
-        // 1. Setup Floor and Room using QuarkusTransaction
-        final Holder<Long> roomIdHolder = new Holder<>();
-        QuarkusTransaction.requiringNew()
-                .run(
-                        () -> {
-                            Floor floor = new Floor();
-                            floor.setName("API Test Floor - Seat");
-                            floor.setFloorNumber(201);
-                            testEntityManager.persist(floor);
-                            OfficeRoom room = new OfficeRoom();
-                            room.setName("API Test Room - Seat");
-                            room.setRoomNumber("SRoom1");
-                            room.setFloor(floor);
-                            testEntityManager.persist(room);
-                            testEntityManager.flush();
-                            roomIdHolder.value = room.getId();
-                        });
-        Long roomId = roomIdHolder.value;
-        assertNotNull(roomId);
+        // Removed QuarkusTransaction block
+        // 1. Setup Floor and Room using API helpers
+        Long floorId = createFloorForTest("API Floor - SeatCG", 2010);
+        Long roomId = createRoomForTest("API Room - SeatCG", "SRoomCG1", floorId);
 
         // 2. Create Seat via API, referencing the created Room ID
         Seat seatPayload = new Seat();
@@ -92,7 +130,7 @@ public class SeatResourceTest extends BaseResourceTest {
                 .body("employeeIds", empty());
     }
 
-    @Test // No DB interaction
+    @Test // No DB interaction needed
     public void testGetSeatNotFound() {
         given().when()
                 .get("/seats/999")
@@ -100,7 +138,7 @@ public class SeatResourceTest extends BaseResourceTest {
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
-    @Test // No DB interaction
+    @Test // No DB interaction needed
     public void testCreateSeatNoRoom() {
         Seat seat = new Seat();
         seat.setSeatNumber("NR1");
@@ -112,12 +150,12 @@ public class SeatResourceTest extends BaseResourceTest {
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
-    @Test // No DB interaction
+    @Test // No DB interaction needed
     public void testCreateSeatInvalidRoom() {
         Seat seat = new Seat();
         seat.setSeatNumber("IR1");
         OfficeRoom invalidRoomRef = new OfficeRoom();
-        invalidRoomRef.setId(999L);
+        invalidRoomRef.setId(999L); // Non-existent room ID
         seat.setRoom(invalidRoomRef);
         given().contentType(ContentType.JSON)
                 .body(seat)
@@ -127,29 +165,14 @@ public class SeatResourceTest extends BaseResourceTest {
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
-    @Test // Needs setup transaction
+    @Test
     public void testCreateSeatDuplicateNumberInRoom() {
-        // Setup Floor and Room
-        final Holder<Long> roomIdHolder = new Holder<>();
-        QuarkusTransaction.requiringNew()
-                .run(
-                        () -> {
-                            Floor floor = new Floor();
-                            floor.setName("API Test Floor - DupSeat");
-                            floor.setFloorNumber(203);
-                            testEntityManager.persist(floor);
-                            OfficeRoom room = new OfficeRoom();
-                            room.setName("API Test Room - DupSeat");
-                            room.setRoomNumber("R-DupS");
-                            room.setFloor(floor);
-                            testEntityManager.persist(room);
-                            testEntityManager.flush();
-                            roomIdHolder.value = room.getId();
-                        });
-        Long roomId = roomIdHolder.value;
-        assertNotNull(roomId);
+        // Removed QuarkusTransaction block
+        // Setup Floor and Room using API helpers
+        Long floorId = createFloorForTest("API Floor - DupSeat", 2030);
+        Long roomId = createRoomForTest("API Room - DupSeat", "R-DupS", floorId);
 
-        // Create Seat 1
+        // Create Seat 1 via API
         Seat seat1Payload = new Seat();
         seat1Payload.setSeatNumber("DupS1");
         OfficeRoom roomRef1 = new OfficeRoom();
@@ -164,7 +187,7 @@ public class SeatResourceTest extends BaseResourceTest {
                 .ifValidationFails()
                 .statusCode(Response.Status.CREATED.getStatusCode());
 
-        // Create Seat 2 (duplicate number in same room)
+        // Create Seat 2 (duplicate number in same room) via API
         Seat seat2Payload = new Seat();
         seat2Payload.setSeatNumber("DupS1"); // Same number
         OfficeRoom roomRef2 = new OfficeRoom();
@@ -177,40 +200,34 @@ public class SeatResourceTest extends BaseResourceTest {
                 .then()
                 .log()
                 .ifValidationFails()
-                .statusCode(Response.Status.CONFLICT.getStatusCode());
+                .statusCode(Response.Status.CONFLICT.getStatusCode()); // Expect conflict
     }
 
-    @Test // Needs setup transaction
+    @Test
     public void testUpdateSeat() {
-        // Setup Floor, Room, Seat
-        final Holder<Long> roomIdHolder = new Holder<>();
-        final Holder<Long> seatIdHolder = new Holder<>();
-        QuarkusTransaction.requiringNew()
-                .run(
-                        () -> {
-                            Floor floor = new Floor();
-                            floor.setName("API Floor - UpdSeat");
-                            floor.setFloorNumber(204);
-                            testEntityManager.persist(floor);
-                            OfficeRoom room = new OfficeRoom();
-                            room.setName("API Room - UpdSeat");
-                            room.setRoomNumber("R-UpdS");
-                            room.setFloor(floor);
-                            testEntityManager.persist(room);
-                            Seat seat = new Seat();
-                            seat.setSeatNumber("OrigS1");
-                            seat.setRoom(room);
-                            testEntityManager.persist(seat);
-                            testEntityManager.flush();
-                            roomIdHolder.value = room.getId();
-                            seatIdHolder.value = seat.getId();
-                        });
-        Long roomId = roomIdHolder.value;
-        Long seatId = seatIdHolder.value;
-        assertNotNull(roomId);
-        assertNotNull(seatId);
+        // Removed QuarkusTransaction block
+        // Setup Floor, Room, Seat using API helpers
+        Long floorId = createFloorForTest("API Floor - UpdSeat", 2040);
+        Long roomId = createRoomForTest("API Room - UpdSeat", "R-UpdS", floorId);
 
-        // Update seat data
+        Seat initialSeatPayload = new Seat();
+        initialSeatPayload.setSeatNumber("OrigS1");
+        OfficeRoom initialRoomRef = new OfficeRoom();
+        initialRoomRef.setId(roomId);
+        initialSeatPayload.setRoom(initialRoomRef);
+
+        SeatDTO createdSeatDto =
+                given().contentType(ContentType.JSON)
+                        .body(initialSeatPayload)
+                        .when()
+                        .post("/seats")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(SeatDTO.class);
+        Long seatId = createdSeatDto.getId();
+
+        // Update seat data via API
         Seat updatePayload = new Seat();
         updatePayload.setSeatNumber("UpdatedS1");
         updatePayload.setX(10f);
@@ -233,37 +250,36 @@ public class SeatResourceTest extends BaseResourceTest {
                 .body("seatNumber", equalTo("UpdatedS1"))
                 .body("roomId", equalTo(roomId.intValue()))
                 .body("x", equalTo(10f))
+                .body("y", equalTo(20f)) // Added y check
                 .body("rotation", equalTo(90f))
                 .body("occupied", equalTo(false));
     }
 
-    @Test // Needs setup transaction
+    @Test
     public void testDeleteSeat() {
-        // Setup Floor, Room, Seat
-        final Holder<Long> seatIdHolder = new Holder<>();
-        QuarkusTransaction.requiringNew()
-                .run(
-                        () -> {
-                            Floor floor = new Floor();
-                            floor.setName("API Floor - DelSeat");
-                            floor.setFloorNumber(205);
-                            testEntityManager.persist(floor);
-                            OfficeRoom room = new OfficeRoom();
-                            room.setName("API Room - DelSeat");
-                            room.setRoomNumber("R-DelS");
-                            room.setFloor(floor);
-                            testEntityManager.persist(room);
-                            Seat seat = new Seat();
-                            seat.setSeatNumber("DeleteS1");
-                            seat.setRoom(room);
-                            testEntityManager.persist(seat);
-                            testEntityManager.flush();
-                            seatIdHolder.value = seat.getId();
-                        });
-        Long seatId = seatIdHolder.value;
-        assertNotNull(seatId);
+        // Removed QuarkusTransaction block
+        // Setup Floor, Room, Seat using API helpers
+        Long floorId = createFloorForTest("API Floor - DelSeat", 2050);
+        Long roomId = createRoomForTest("API Room - DelSeat", "R-DelS", floorId);
 
-        // Delete the seat
+        Seat seatPayload = new Seat();
+        seatPayload.setSeatNumber("DelS1");
+        OfficeRoom roomRef = new OfficeRoom();
+        roomRef.setId(roomId);
+        seatPayload.setRoom(roomRef);
+
+        SeatDTO createdSeatDto =
+                given().contentType(ContentType.JSON)
+                        .body(seatPayload)
+                        .when()
+                        .post("/seats")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(SeatDTO.class);
+        Long seatId = createdSeatDto.getId();
+
+        // Delete seat via API
         given().when()
                 .delete("/seats/" + seatId)
                 .then()
@@ -280,75 +296,88 @@ public class SeatResourceTest extends BaseResourceTest {
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
-    @Test // No DB interaction
+    @Test // No DB interaction needed
     public void testCreateSeatWithInvalidData() {
-        Seat seat = new Seat(); // Missing seat number
-        OfficeRoom roomRef = new OfficeRoom();
-        roomRef.setId(1L); // Assume room 1 exists or use valid ID
-        seat.setRoom(roomRef);
+        // Test missing seat number
+        Seat seatNoNumber = new Seat();
+        OfficeRoom dummyRoomRef = new OfficeRoom();
+        dummyRoomRef.setId(1L); // Needs a room reference for validation
+        seatNoNumber.setRoom(dummyRoomRef);
         given().contentType(ContentType.JSON)
-                .body(seat)
+                .body(seatNoNumber)
                 .when()
                 .post("/seats")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
 
-        Seat seat2 = new Seat();
-        seat2.setSeatNumber("ValidNum"); // Missing room
+        // Test empty seat number (assuming validation catches this)
+        Seat seatEmptyNumber = new Seat();
+        seatEmptyNumber.setSeatNumber("");
+        seatEmptyNumber.setRoom(dummyRoomRef);
         given().contentType(ContentType.JSON)
-                .body(seat2)
+                .body(seatEmptyNumber)
                 .when()
                 .post("/seats")
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+
+        // Test missing room is handled by testCreateSeatNoRoom
     }
 
-    @Test // Needs setup transaction
+    @Test
     public void testDeleteSeatWithEmployeesAssigned() {
-        // Setup Floor, Room, Seat, Employee, Assignment
-        final Holder<Long> seatIdHolder = new Holder<>();
-        QuarkusTransaction.requiringNew()
-                .run(
-                        () -> {
-                            Floor floor = new Floor();
-                            floor.setName("API Floor - DelAssignSeat");
-                            floor.setFloorNumber(206);
-                            testEntityManager.persist(floor);
-                            OfficeRoom room = new OfficeRoom();
-                            room.setName("API Room - DelAssignSeat");
-                            room.setRoomNumber("R-DelAS");
-                            room.setFloor(floor);
-                            testEntityManager.persist(room);
-                            Seat seat = new Seat();
-                            seat.setSeatNumber("DelS-Assign");
-                            seat.setRoom(room);
-                            testEntityManager.persist(seat);
-                            Employee employee = new Employee();
-                            employee.setFullName("Assigned Emp");
-                            employee.setOccupation("Worker");
-                            testEntityManager.persist(employee);
-                            testEntityManager.flush(); // Flush to get IDs
-                            // Fetch the managed employee to associate the seat
-                            Employee managedEmployee =
-                                    testEntityManager.find(Employee.class, employee.getId());
-                            Seat managedSeat = testEntityManager.find(Seat.class, seat.getId());
-                            if (managedEmployee != null && managedSeat != null) {
-                                managedEmployee.addSeat(
-                                        managedSeat); // Associate employee with seat
-                                testEntityManager.merge(managedEmployee); // Persist association
-                            }
-                            testEntityManager.flush();
-                            seatIdHolder.value = seat.getId();
-                        });
-        Long seatId = seatIdHolder.value;
-        assertNotNull(seatId);
+        // Removed QuarkusTransaction block
+        // Setup: Floor -> Room -> Seat -> Employee -> Assign Employee to Seat
+        Long floorId = createFloorForTest("API Floor - DelSeatEmp", 2060);
+        Long roomId = createRoomForTest("API Room - DelSeatEmp", "R-DelSE", floorId);
 
-        // Attempt to delete the assigned seat (should fail)
+        Seat seatPayload = new Seat();
+        seatPayload.setSeatNumber("DelSE1");
+        OfficeRoom roomRef = new OfficeRoom();
+        roomRef.setId(roomId);
+        seatPayload.setRoom(roomRef);
+        SeatDTO createdSeatDto =
+                given().contentType(ContentType.JSON)
+                        .body(seatPayload)
+                        .when()
+                        .post("/seats")
+                        .then()
+                        .statusCode(201)
+                        .extract()
+                        .as(SeatDTO.class);
+        Long seatId = createdSeatDto.getId();
+
+        Long employeeId = createEmployeeForTest("Emp On Seat", "Tester");
+
+        // Assign employee to seat using Employee endpoint
+        given().when()
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId, seatId)
+                .then()
+                .statusCode(200);
+
+        // Verify seat is occupied
+        given().when().get("/seats/{id}", seatId).then().body("occupied", equalTo(true));
+
+        // Try deleting the seat - should fail (CONFLICT)
         given().when()
                 .delete("/seats/" + seatId)
                 .then()
                 .log()
                 .ifValidationFails()
                 .statusCode(Response.Status.CONFLICT.getStatusCode());
+
+        // Cleanup: Unassign employee first
+        given().when()
+                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId, seatId)
+                .then()
+                .statusCode(200);
+
+        // Now delete the seat - should succeed
+        given().when()
+                .delete("/seats/" + seatId)
+                .then()
+                .log()
+                .ifValidationFails()
+                .statusCode(Response.Status.NO_CONTENT.getStatusCode());
     }
 }

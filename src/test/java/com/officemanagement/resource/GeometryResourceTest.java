@@ -4,71 +4,110 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.officemanagement.dto.FloorDTO;
+import com.officemanagement.dto.OfficeRoomDTO;
+import com.officemanagement.dto.SeatDTO;
 import com.officemanagement.model.Floor;
 import com.officemanagement.model.OfficeRoom;
 import com.officemanagement.model.Seat;
-import io.quarkus.narayana.jta.QuarkusTransaction;
-import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests specifically for the geometry PATCH endpoints in RoomResource. */
-@QuarkusTest
 public class GeometryResourceTest extends BaseResourceTest {
 
-    @Inject EntityManager testEntityManager;
+    private Long createFloorForTest(String name, int number) {
+        Floor floorPayload = new Floor();
+        floorPayload.setName(name);
+        floorPayload.setFloorNumber(number);
+        FloorDTO createdFloorDto =
+                given().contentType(ContentType.JSON)
+                        .body(floorPayload)
+                        .when()
+                        .post("/floors")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(FloorDTO.class);
+        assertNotNull(createdFloorDto.getId(), "Floor creation failed in helper");
+        return createdFloorDto.getId();
+    }
+
+    private Long createRoomForTest(String name, String number, Long floorId, Float x, Float y) {
+        OfficeRoom roomPayload = new OfficeRoom();
+        roomPayload.setName(name);
+        roomPayload.setRoomNumber(number);
+        roomPayload.setX(x);
+        roomPayload.setY(y);
+        Floor floorRef = new Floor();
+        floorRef.setId(floorId);
+        roomPayload.setFloor(floorRef);
+        OfficeRoomDTO createdRoomDto =
+                given().contentType(ContentType.JSON)
+                        .body(roomPayload)
+                        .when()
+                        .post("/rooms")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(OfficeRoomDTO.class);
+        assertNotNull(createdRoomDto.getId(), "Room creation failed in helper");
+        return createdRoomDto.getId();
+    }
+
+    private Long createSeatForTest(String number, Long roomId, Float x, Float y) {
+        Seat seatPayload = new Seat();
+        seatPayload.setSeatNumber(number);
+        seatPayload.setX(x);
+        seatPayload.setY(y);
+        OfficeRoom roomRef = new OfficeRoom();
+        roomRef.setId(roomId);
+        seatPayload.setRoom(roomRef);
+        SeatDTO createdSeatDto =
+                given().contentType(ContentType.JSON)
+                        .body(seatPayload)
+                        .when()
+                        .post("/seats")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(SeatDTO.class);
+        assertNotNull(createdSeatDto.getId(), "Seat creation failed in helper");
+        return createdSeatDto.getId();
+    }
 
     private static class SetupResult {
         Long floorId;
         Long roomId;
         Long seatId;
-        Float initialRoomX;
-        Float initialSeatY;
+        Float initialRoomX = 1.0f;
+        Float initialRoomY = 2.0f;
+        Float initialSeatX = 0.5f;
+        Float initialSeatY = 0.6f;
     }
 
     SetupResult createTestRoomWithSeat() {
-        return QuarkusTransaction.requiringNew()
-                .call(
-                        () -> {
-                            Floor floor = new Floor();
-                            floor.setName("Geometry Test Floor");
-                            floor.setFloorNumber(100);
-                            testEntityManager.persist(floor);
+        SetupResult result = new SetupResult();
+        result.floorId =
+                createFloorForTest("Geometry Test Floor API", 1000 + (int) (Math.random() * 100));
+        result.roomId =
+                createRoomForTest(
+                        "Geometry Test Room API",
+                        "G101API",
+                        result.floorId,
+                        result.initialRoomX,
+                        result.initialRoomY);
+        result.seatId =
+                createSeatForTest(
+                        "GS1API", result.roomId, result.initialSeatX, result.initialSeatY);
 
-                            OfficeRoom room = new OfficeRoom();
-                            room.setName("Geometry Test Room");
-                            room.setRoomNumber("G101");
-                            room.setFloor(floor);
-                            room.setX(1.0f);
-                            room.setY(2.0f);
-                            testEntityManager.persist(room);
-
-                            Seat seat = new Seat();
-                            seat.setSeatNumber("GS1");
-                            seat.setRoom(room);
-                            seat.setX(0.5f);
-                            seat.setY(0.6f);
-                            testEntityManager.persist(seat);
-
-                            testEntityManager.flush();
-
-                            SetupResult result = new SetupResult();
-                            result.floorId = floor.getId();
-                            result.roomId = room.getId();
-                            result.seatId = seat.getId();
-                            result.initialRoomX = room.getX();
-                            result.initialSeatY = seat.getY();
-
-                            assertNotNull(result.floorId, "Floor ID missing");
-                            assertNotNull(result.roomId, "Room ID missing");
-                            assertNotNull(result.seatId, "Seat ID missing");
-                            return result;
-                        });
+        assertNotNull(result.floorId, "Floor ID missing after API setup");
+        assertNotNull(result.roomId, "Room ID missing after API setup");
+        assertNotNull(result.seatId, "Seat ID missing after API setup");
+        return result;
     }
 
     @Test
@@ -100,7 +139,7 @@ public class GeometryResourceTest extends BaseResourceTest {
         SetupResult setup = createTestRoomWithSeat();
         Long roomId = setup.roomId;
         Float originalX = setup.initialRoomX;
-        assertNotNull(originalX, "Original X should exist");
+        assertNotNull(originalX, "Original X should exist from setup");
 
         Map<String, Object> geometryUpdate = new HashMap<>();
         geometryUpdate.put("width", 180.0f);
@@ -151,7 +190,7 @@ public class GeometryResourceTest extends BaseResourceTest {
         Long roomId = setup.roomId;
         Long seatId = setup.seatId;
         Float originalY = setup.initialSeatY;
-        assertNotNull(originalY, "Original Y should exist");
+        assertNotNull(originalY, "Original Y should exist from setup");
 
         Map<String, Object> geometryUpdate = new HashMap<>();
         geometryUpdate.put("rotation", 90.0f);
@@ -176,15 +215,15 @@ public class GeometryResourceTest extends BaseResourceTest {
         given().contentType(ContentType.JSON)
                 .body(geometryUpdate)
                 .when()
-                .patch("/rooms/999/geometry") // Use relative path
+                .patch("/rooms/999/geometry")
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
     public void testUpdateSeatGeometryNotFoundSeat() {
-        SetupResult result = createTestRoomWithSeat();
-        Long roomId = result.roomId;
+        Long floorId = createFloorForTest("Geo Floor NoSeat", 1011);
+        Long roomId = createRoomForTest("Geo Room NoSeat", "G-NS", floorId, 1f, 1f);
 
         Map<String, Object> geometryUpdate = new HashMap<>();
         geometryUpdate.put("x", 10.0f);
@@ -192,26 +231,25 @@ public class GeometryResourceTest extends BaseResourceTest {
         given().contentType(ContentType.JSON)
                 .body(geometryUpdate)
                 .when()
-                .patch("/rooms/" + roomId + "/seats/999/geometry") // Use relative path
+                .patch("/rooms/" + roomId + "/seats/999/geometry")
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
     public void testUpdateSeatGeometryWrongRoom() {
-        SetupResult setup1 = createTestRoomWithSeat(); // Creates room1, floor1, seat1
-        SetupResult setup2 =
-                createTestRoomWithSeat(); // Creates room2, floor2, seat2 (IDs will be different)
+        SetupResult setup1 = createTestRoomWithSeat();
+        SetupResult setup2 = createTestRoomWithSeat();
         Long room1Id = setup1.roomId;
-        Long seat2Id = setup2.seatId; // Use ID from setup result
+        Long seat2Id = setup2.seatId;
         assertNotNull(room1Id);
         assertNotNull(seat2Id);
         assertNotEquals(setup1.roomId, setup2.roomId, "Room IDs should be different");
+        assertNotEquals(setup1.seatId, setup2.seatId, "Seat IDs should be different");
 
         Map<String, Object> geometryUpdate = new HashMap<>();
         geometryUpdate.put("x", 10.0f);
 
-        // Try to update seat2 using room1's ID in the path (should fail)
         given().contentType(ContentType.JSON)
                 .body(geometryUpdate)
                 .when()
@@ -219,7 +257,6 @@ public class GeometryResourceTest extends BaseResourceTest {
                 .then()
                 .log()
                 .ifValidationFails()
-                // Expect NOT_FOUND because seat2 is not in room1
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 }

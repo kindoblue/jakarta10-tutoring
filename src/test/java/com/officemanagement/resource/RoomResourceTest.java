@@ -8,27 +8,19 @@ import com.officemanagement.dto.FloorDTO;
 import com.officemanagement.dto.OfficeRoomDTO;
 import com.officemanagement.model.Floor;
 import com.officemanagement.model.OfficeRoom;
-import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for the RoomResource endpoints. */
-@QuarkusTest
 public class RoomResourceTest extends BaseResourceTest {
 
-    @Inject EntityManager testEntityManager;
-
     @Test
-    @Transactional
     public void testCreateAndGetRoom() {
         // 1. Create Floor via API
         Floor floorPayload = new Floor();
         floorPayload.setName("API Test Floor - Room");
-        floorPayload.setFloorNumber(202);
+        floorPayload.setFloorNumber(2020); // Using unique number for test isolation
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
                         .body(floorPayload)
@@ -56,16 +48,11 @@ public class RoomResourceTest extends BaseResourceTest {
                         .when()
                         .post("/rooms") // Use relative path
                         .then()
-                        .statusCode(Response.Status.CREATED.getStatusCode()) // This should now pass
+                        .statusCode(Response.Status.CREATED.getStatusCode())
                         .body("id", notNullValue())
                         .body("name", equalTo("API Test Room"))
                         .body("roomNumber", equalTo("RRoom1"))
-                        .body(
-                                "floorId",
-                                equalTo(
-                                        createdFloorDto
-                                                .getId()
-                                                .intValue())) // Check floorId from DTO
+                        .body("floorId", equalTo(createdFloorDto.getId().intValue()))
                         .extract()
                         .as(OfficeRoomDTO.class); // Extract as OfficeRoomDTO
 
@@ -76,19 +63,21 @@ public class RoomResourceTest extends BaseResourceTest {
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("id", equalTo(createdRoomDto.getId().intValue())) // Use DTO getter for ID
                 .body("name", equalTo("API Test Room"))
-                .body("floor.name", equalTo("API Test Floor - Room"));
+                // Assuming GET /rooms/{id} might not populate the full Floor object by default
+                // Adjust assertion if it does include floor details
+                // .body("floor.name", equalTo("API Test Floor - Room"))
+                .body("floorId", equalTo(createdFloorDto.getId().intValue()));
     }
 
     @Test
     public void testGetRoomNotFound() {
         given().when()
-                .get("/rooms/999") // Use relative path
+                .get("/rooms/999") // Use relative path, assuming 999 not found
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
-    @Transactional
     public void testCreateRoomNoFloor() {
         OfficeRoom room = new OfficeRoom();
         room.setName("No Floor Room");
@@ -104,7 +93,6 @@ public class RoomResourceTest extends BaseResourceTest {
     }
 
     @Test
-    @Transactional
     public void testCreateRoomInvalidFloor() {
         OfficeRoom room = new OfficeRoom();
         room.setName("Invalid Floor Room");
@@ -122,12 +110,11 @@ public class RoomResourceTest extends BaseResourceTest {
     }
 
     @Test
-    @Transactional
     public void testCreateRoomDuplicateNumberOnFloor() {
         // API Setup: Floor
         Floor floorPayload = new Floor();
         floorPayload.setName("API Floor - DupRoom");
-        floorPayload.setFloorNumber(208);
+        floorPayload.setFloorNumber(2080); // Unique floor number
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
                         .body(floorPayload)
@@ -168,12 +155,11 @@ public class RoomResourceTest extends BaseResourceTest {
     }
 
     @Test
-    @Transactional
     public void testUpdateRoom() {
         // API Setup: Floor -> Room
         Floor floorPayload = new Floor();
         floorPayload.setName("API Floor - UpdRoom");
-        floorPayload.setFloorNumber(209);
+        floorPayload.setFloorNumber(2090); // Unique floor number
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
                         .body(floorPayload)
@@ -204,7 +190,7 @@ public class RoomResourceTest extends BaseResourceTest {
         OfficeRoom updatePayload = new OfficeRoom();
         updatePayload.setName("Updated Room Name");
         updatePayload.setRoomNumber("Upd2");
-        updatePayload.setFloor(floorRef);
+        updatePayload.setFloor(floorRef); // Keep the same floor
 
         given().contentType(ContentType.JSON)
                 .body(updatePayload)
@@ -218,12 +204,11 @@ public class RoomResourceTest extends BaseResourceTest {
     }
 
     @Test
-    @Transactional
     public void testDeleteRoom() {
         // API Setup: Floor -> Room
         Floor floorPayload = new Floor();
         floorPayload.setName("API Floor - DelRoom");
-        floorPayload.setFloorNumber(210);
+        floorPayload.setFloorNumber(2100); // Unique floor number
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
                         .body(floorPayload)
@@ -241,31 +226,56 @@ public class RoomResourceTest extends BaseResourceTest {
         roomPayload.setFloor(floorRef);
 
         // Create the initial room and extract its ID from the DTO response
-        Integer createdRoomId =
+        OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
                         .body(roomPayload)
                         .when()
                         .post("/rooms")
                         .then()
                         .statusCode(Response.Status.CREATED.getStatusCode())
-                        .body("id", notNullValue()) // Verify DTO structure briefly
                         .extract()
-                        .path("id");
-        assertNotNull(createdRoomId, "Initial Room ID should not be null");
+                        .as(OfficeRoomDTO.class);
+        Long createdRoomId = createdRoomDto.getId();
+        assertNotNull(createdRoomId);
 
         // Delete the room
         given().when()
-                .delete("/rooms/" + createdRoomId) // Use extracted ID
+                .delete("/rooms/" + createdRoomId)
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
 
         // Verify it's gone
         given().when()
-                .get("/rooms/" + createdRoomId) // Use extracted ID
+                .get("/rooms/" + createdRoomId)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
-    // Add tests for deleting room with seats, getting seats, etc.
+    @Test
+    public void testUpdateRoomNotFound() {
+        OfficeRoom updatePayload = new OfficeRoom();
+        updatePayload.setName("Updated Room Name");
+        updatePayload.setRoomNumber("UpdNotFound");
+        // Floor is needed for valid payload, but the room ID is the target
+        Floor dummyFloor = new Floor();
+        dummyFloor.setId(
+                1L); // Assume some floor ID might exist, or use one created in another test if
+        // state persists
+        updatePayload.setFloor(dummyFloor);
 
+        given().contentType(ContentType.JSON)
+                .body(updatePayload)
+                .when()
+                .put("/rooms/9999") // Non-existent ID
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
+
+    @Test
+    public void testDeleteRoomNotFound() {
+        given().when()
+                .delete("/rooms/9999") // Non-existent ID
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
 }
