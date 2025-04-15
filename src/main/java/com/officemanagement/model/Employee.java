@@ -45,6 +45,11 @@ public class Employee {
     @ToString.Include
     private LocalDateTime createdAt;
 
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+
     public void addSeat(Seat seat) {
         seats.add(seat);
         seat.getEmployees().add(this);

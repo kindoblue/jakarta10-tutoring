@@ -553,7 +553,8 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .body("seatIds", contains(seatId2.value.intValue()));
 
-        // Assign occupied seat1 to employee2 -> Should succeed (multiple employees per seat allowed)
+        // Assign occupied seat1 to employee2 -> Should succeed (multiple employees per seat
+        // allowed)
         given().baseUri("http://localhost:8080/test")
                 .put("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId1.value)
                 .then()
@@ -564,7 +565,9 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .get("/employees/{empId}", employeeId1.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("seatIds", contains(seatId1.value.intValue())); // employee1 should still have seat1
+                .body(
+                        "seatIds",
+                        contains(seatId1.value.intValue())); // employee1 should still have seat1
 
         // Verify employee2 now has seat1 and seat2
         given().baseUri("http://localhost:8080/test")
@@ -585,7 +588,9 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 // employee1 should now have seat1 and seat3
-                .body("seatIds", containsInAnyOrder(seatId1.value.intValue(), seatId3.value.intValue()));
+                .body(
+                        "seatIds",
+                        containsInAnyOrder(seatId1.value.intValue(), seatId3.value.intValue()));
 
         // Unassign seat2 from employee2
         given().baseUri("http://localhost:8080/test")
@@ -596,7 +601,10 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .get("/employees/{empId}", employeeId2.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("seatIds", contains(seatId1.value.intValue())); // employee2 should only have seat1 left
+                .body(
+                        "seatIds",
+                        contains(
+                                seatId1.value.intValue())); // employee2 should only have seat1 left
 
         // Try unassigning seat2 (unassigned for emp1) from employee1 -> Bad Request (or OK?)
         given().baseUri("http://localhost:8080/test")
