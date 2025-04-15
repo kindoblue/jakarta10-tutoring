@@ -1,0 +1,54 @@
+
+Let's check if the PostgreSQL driver is now working properly. Let me look at the server logs to see if the issue is resolved.
+
+```bash
+$JBOSS_HOME/bin/standalone.sh -c standalone.xml & sleep 15 && tail -50 $JBOSS_HOME/standalone/log/server.log 2>/dev/null || echo "Server log not available yet"
+```
+Let's check if the server is running and if the PostgreSQL driver is loaded:
+
+```bash
+ps -ef | grep java | grep -v grep | cat
+```
+Let's check for the server logs:
+
+```bash
+find $JBOSS_HOME/standalone/log -type f -name "server.log" -o -name "*.log" | xargs ls -la 2>/dev/null || echo "No log files found"
+```
+Let's check the server.log file:
+
+```bash
+tail -100 $JBOSS_HOME/standalone/log/server.log 2>/dev/null || echo "Server log not available or empty"
+```
+Let's check for console output directly since the server log might not be available yet:
+
+```bash
+tail -1000 log.txt | grep -E "postgresql|datasource|driver" | tail -30
+```
+Let's check for the most recent driver registration:
+
+```bash
+$JBOSS_HOME/bin/jboss-cli.sh --connect "/subsystem=datasources:installed-drivers-list" | cat
+```
+Now let's check the datasource status:
+
+```bash
+$JBOSS_HOME/bin/jboss-cli.sh --connect "/subsystem=datasources/data-source=PostgresDS_Pool:read-resource(include-runtime=true)" | cat
+```
+Great news! Your PostgreSQL driver and datasource are now working correctly. 
+
+The changes we made to the Dockerfile were successfully applied during the container rebuild. This fixed the missing dependencies issue that was preventing the PostgreSQL driver from loading properly.
+
+The CLI commands confirm:
+
+1. The PostgreSQL driver is now properly installed and registered:
+   - Driver name: postgresql
+   - Module: org.postgresql.jdbc
+   - Version: 42.7.3
+   - All the necessary dependencies are loaded
+
+2. The PostgreSQL datasource is also properly configured:
+   - JNDI name: java:jboss/datasources/PostgresDS
+   - Connection URL: jdbc:postgresql://db:5432/postgres
+   - Enabled: true
+
+The error you were seeing in the logs previously has been resolved. You now have both PostgreSQL (for production) and H2 (for testing) drivers properly configured in your JBoss EAP 8 server.

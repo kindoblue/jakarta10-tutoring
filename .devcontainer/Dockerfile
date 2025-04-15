@@ -93,7 +93,7 @@ RUN chmod -R ug+rwX $JBOSS_HOME
 
 # Copy custom configuration and define PostgreSQL module
 COPY --chown=jboss:root conf/standalone.xml $JBOSS_HOME/standalone/configuration/
-RUN $JBOSS_HOME/bin/jboss-cli.sh --commands="embed-server --std-out=echo,module add --name=org.postgresql.jdbc --resources=/tmp/postgresql.jar --dependencies=jakarta.api\\,jakarta.resource.api\\,jakarta.transaction.api,stop-embedded-server" && \
+RUN $JBOSS_HOME/bin/jboss-cli.sh --commands="embed-server --std-out=echo,module add --name=org.postgresql.jdbc --resources=/tmp/postgresql.jar --dependencies=java.sql\\,java.xml\\,java.logging\\,jakarta.transaction.api\\,jakarta.servlet.api,stop-embedded-server" && \
     rm /tmp/postgresql.jar
 
 EXPOSE 8080 8787 9990
