@@ -2,7 +2,6 @@ package com.officemanagement.resource;
 
 import com.officemanagement.dto.OfficeRoomDTO;
 import com.officemanagement.dto.SeatDTO;
-import com.officemanagement.model.Employee;
 import com.officemanagement.model.Floor;
 import com.officemanagement.model.OfficeRoom;
 import com.officemanagement.model.Seat;
@@ -17,7 +16,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.hibernate.Hibernate;
 
 @Path("/rooms")
@@ -90,8 +88,8 @@ public class RoomResource {
                 entityManager
                         .createQuery(
                                 "select distinct r from OfficeRoom r "
-                                        + "left join fetch r.seats s "
-                                        + "left join fetch s.employees "
+                                        + "left join fetch r.seats "
+                                        + "left join fetch r.seats.employees "
                                         + "where r.id = :id",
                                 OfficeRoom.class)
                         .setParameter("id", id)
@@ -103,50 +101,9 @@ public class RoomResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", room.getId());
-        response.put("name", room.getName());
-        response.put("roomNumber", room.getRoomNumber());
-        response.put("x", room.getX());
-        response.put("y", room.getY());
-        response.put("width", room.getWidth());
-        response.put("height", room.getHeight());
-        response.put("createdAt", room.getCreatedAt());
-
-        if (room.getFloor() != null) {
-            Map<String, Object> floorInfo = new HashMap<>();
-            floorInfo.put("id", room.getFloor().getId());
-            floorInfo.put("name", room.getFloor().getName());
-            floorInfo.put("floorNumber", room.getFloor().getFloorNumber());
-            response.put("floor", floorInfo);
-        }
-
-        if (room.getSeats() != null && !room.getSeats().isEmpty()) {
-            Set<Map<String, Object>> seatsList = new java.util.HashSet<>();
-            for (Seat seat : room.getSeats()) {
-                Map<String, Object> seatInfo = new HashMap<>();
-                seatInfo.put("id", seat.getId());
-                seatInfo.put("seatNumber", seat.getSeatNumber());
-                seatInfo.put("x", seat.getX());
-                seatInfo.put("y", seat.getY());
-                seatInfo.put("width", seat.getWidth());
-                seatInfo.put("height", seat.getHeight());
-                seatInfo.put("rotation", seat.getRotation());
-
-                if (seat.getEmployees() != null && !seat.getEmployees().isEmpty()) {
-                    Set<Long> employeeIds =
-                            seat.getEmployees().stream()
-                                    .map(Employee::getId)
-                                    .collect(Collectors.toSet());
-                    seatInfo.put("employeeIds", employeeIds);
-                }
-
-                seatsList.add(seatInfo);
-            }
-            response.put("seats", seatsList);
-        }
-
-        return Response.ok(response).build();
+        // Convert to DTO
+        OfficeRoomDTO dto = new OfficeRoomDTO(room);
+        return Response.ok(dto).build();
     }
 
     @GET

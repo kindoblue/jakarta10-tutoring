@@ -60,7 +60,7 @@ public class FloorResource {
 
     @GET
     @Path("/{id}/svg")
-    @Produces("image/svg+xml")
+    @Produces(MediaType.TEXT_PLAIN)
     public Response getFloorPlan(@PathParam("id") Long id) {
         FloorPlanimetry planimetry = entityManager.find(FloorPlanimetry.class, id);
         if (planimetry == null
@@ -170,7 +170,7 @@ public class FloorResource {
                         .setParameter("floorId", id)
                         .getSingleResult();
         if (roomCount > 0) {
-            return Response.status(Response.Status.BAD_REQUEST)
+            return Response.status(Response.Status.CONFLICT)
                     .entity("Cannot delete floor with existing rooms.")
                     .build();
         }

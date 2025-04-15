@@ -32,7 +32,9 @@ public class Floor {
     @ToString.Include
     private Integer floorNumber;
 
-    @ToString.Include private String name;
+    @ToString.Include
+    @Column(name = "name")
+    private String name;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

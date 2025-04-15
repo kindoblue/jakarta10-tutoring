@@ -4,21 +4,17 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.officemanagement.model.Employee;
 import com.officemanagement.model.Floor;
 import com.officemanagement.model.OfficeRoom;
 import com.officemanagement.model.Seat;
 import io.restassured.http.ContentType;
-import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EmployeeResourceIT extends BaseResourceTest {
-
-    @Inject ObjectMapper objectMapper;
 
     private static class Holder<T> {
         T value;
@@ -245,7 +241,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId.value + "/assign-seat/" + seatId.value)
+                .put("/employees/" + employeeId.value + "/seats/" + seatId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
@@ -258,7 +254,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId.value + "/unassign-seat/" + seatId.value)
+                .delete("/employees/" + employeeId.value + "/seats/" + seatId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
@@ -352,19 +348,19 @@ public class EmployeeResourceIT extends BaseResourceTest {
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId.value + "/assign-seat/" + nonExistentSeatId)
+                .put("/employees/" + employeeId.value + "/seats/" + nonExistentSeatId)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + nonExistentSeatId + "/assign-seat/" + employeeId.value)
+                .delete("/employees/" + nonExistentSeatId + "/seats/" + employeeId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + nonExistentSeatId + "/assign-seat/" + nonExistentSeatId)
+                .delete("/employees/" + employeeId.value + "/seats/" + nonExistentSeatId)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -461,13 +457,13 @@ public class EmployeeResourceIT extends BaseResourceTest {
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId.value + "/assign-seat/" + seatId1.value)
+                .put("/employees/" + employeeId.value + "/seats/" + seatId1.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId.value + "/assign-seat/" + seatId2.value)
+                .put("/employees/" + employeeId.value + "/seats/" + seatId2.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
@@ -539,7 +535,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 });
 
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId1.value, seatId1.value)
+                .put("/employees/{empId}/seats/{seatId}", employeeId1.value, seatId1.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
@@ -547,7 +543,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .body("seatIds", contains(seatId1.value.intValue()));
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId2.value, seatId2.value)
+                .put("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId2.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
@@ -555,11 +551,11 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .body("seatIds", contains(seatId2.value.intValue()));
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId2.value, seatId1.value)
+                .put("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId1.value)
                 .then()
                 .statusCode(Response.Status.CONFLICT.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId1.value, seatId3.value)
+                .put("/employees/{empId}/seats/{seatId}", employeeId1.value, seatId3.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
@@ -568,7 +564,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .body("seatIds", contains(seatId3.value.intValue()))
                 .body("seatIds", not(contains(seatId1.value.intValue())));
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId2.value, seatId2.value)
+                .delete("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId2.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
@@ -576,7 +572,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .body("seatIds", empty());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId1.value, seatId2.value)
+                .delete("/employees/{empId}/seats/{seatId}", employeeId1.value, seatId2.value)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
@@ -621,35 +617,35 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 });
 
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId.value, seatId.value)
+                .put("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId.value, seatId.value)
+                .put("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId.value, 9999L)
+                .put("/employees/{empId}/seats/{seatId}", employeeId.value, 9999L)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", 8888L, seatId.value)
+                .put("/employees/{empId}/seats/{seatId}", 8888L, seatId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId.value, seatId.value)
+                .delete("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId.value, seatId.value)
+                .delete("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId.value, 9999L)
+                .delete("/employees/{empId}/seats/{seatId}", employeeId.value, 9999L)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", 8888L, seatId.value)
+                .delete("/employees/{empId}/seats/{seatId}", 8888L, seatId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }

@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -156,6 +157,9 @@ public class EmployeeResource {
                     .entity("Employee occupation is required")
                     .build();
         }
+
+        // Set creation timestamp
+        employee.setCreatedAt(LocalDateTime.now());
 
         // Use EntityManager, no need for manual transaction
         entityManager.persist(employee);

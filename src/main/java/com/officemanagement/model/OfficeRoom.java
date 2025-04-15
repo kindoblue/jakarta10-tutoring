@@ -37,6 +37,7 @@ public class OfficeRoom {
     @Column(name = "room_number")
     private String roomNumber;
 
+    @Column(name = "name")
     private String name;
 
     @Column(name = "x")

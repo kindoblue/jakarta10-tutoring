@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.officemanagement.dto.FloorDTO;
 import com.officemanagement.model.Floor;
+import com.officemanagement.model.OfficeRoom;
 // Removed unused model imports if setup is gone
 // import com.officemanagement.model.FloorPlanimetry;
 // import com.officemanagement.model.OfficeRoom;
@@ -378,18 +379,32 @@ public class FloorResourceIT extends BaseResourceTest {
                         .as(FloorDTO.class);
         floorId = floorDto.getId();
 
-        // TODO: Add code here to create a Room associated with floorId via Room API
+        // Create a Room associated with floorId via Room API
+        OfficeRoom roomPayload = new OfficeRoom();
+        roomPayload.setName("Test Room For Delete");
+        roomPayload.setRoomNumber("1080-A");
+        Floor floorRef = new Floor(); // Create a Floor object just for the reference
+        floorRef.setId(floorId);
+        roomPayload.setFloor(floorRef); // Set the floor reference
 
-        // Try deleting the floor via API - should fail if rooms exist and constraint is enforced
+        given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
+                .body(roomPayload)
+                .when()
+                .post("/rooms") // Use the Room creation endpoint
+                .then()
+                .log()
+                .ifValidationFails()
+                .statusCode(Response.Status.CREATED.getStatusCode());
+
+        // Try deleting the floor via API - should fail because the room exists
         given().baseUri("http://localhost:8080/test")
                 .when()
                 .delete("/floors/" + floorId)
                 .then()
                 .log()
                 .ifValidationFails()
-                .statusCode(Response.Status.CONFLICT.getStatusCode()); // Or potentially BAD_REQUEST
-
-        assertTrue(true, "Test needs Room creation via API or different setup");
+                .statusCode(Response.Status.CONFLICT.getStatusCode()); // Expect CONFLICT
     }
 
     @Test
@@ -427,17 +442,17 @@ public class FloorResourceIT extends BaseResourceTest {
                         .as(FloorDTO.class);
         floorId = floorDto.getId();
 
-        // Create floor plan via POST
-        byte[] planData = "Simple Plan Data CG".getBytes();
-        given().contentType(MediaType.APPLICATION_OCTET_STREAM)
+        // Create/Update floor plan via PUT
+        String planData = "<svg>Simple Plan Data CG</svg>"; // Use String for text/plain
+        given().contentType(MediaType.TEXT_PLAIN) // Change to TEXT_PLAIN
                 .baseUri("http://localhost:8080/test")
                 .body(planData)
                 .when()
-                .post("/floors/" + floorId + "/planimetry")
+                .put("/floors/" + floorId + "/svg") // Use PUT and /svg path
                 .then()
                 .log()
                 .ifValidationFails()
-                .statusCode(Response.Status.CREATED.getStatusCode());
+                .statusCode(Response.Status.OK.getStatusCode()); // Expect OK (200) for PUT
 
         // Verify floor DTO now shows hasPlanimetry=true
         given().baseUri("http://localhost:8080/test")
@@ -448,20 +463,20 @@ public class FloorResourceIT extends BaseResourceTest {
                 .body("hasPlanimetry", equalTo(true));
 
         // Get the floor plan
-        byte[] retrievedPlanData =
-                given().accept(MediaType.APPLICATION_OCTET_STREAM)
+        String retrievedPlanData =
+                given().accept(MediaType.TEXT_PLAIN) // Change accept type
                         .baseUri("http://localhost:8080/test")
                         .when()
-                        .get("/floors/" + floorId + "/planimetry")
+                        .get("/floors/" + floorId + "/svg") // Change path to /svg
                         .then()
                         .log()
                         .ifValidationFails()
                         .statusCode(Response.Status.OK.getStatusCode())
-                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .contentType(MediaType.TEXT_PLAIN) // Change expected content type
                         .extract()
-                        .asByteArray();
+                        .asString(); // Extract as String
 
-        assertArrayEquals(planData, retrievedPlanData);
+        assertEquals(planData, retrievedPlanData);
     }
 
     @Test
@@ -502,51 +517,53 @@ public class FloorResourceIT extends BaseResourceTest {
                         .extract()
                         .as(FloorDTO.class);
         floorId = floorDto.getId();
-        byte[] initialPlanData = "Initial Plan Data Upd API".getBytes();
-        given().contentType(MediaType.APPLICATION_OCTET_STREAM)
+        String initialPlanData = "<svg>Initial Plan Data Upd API</svg>"; // Use String
+        given().contentType(MediaType.TEXT_PLAIN) // Use TEXT_PLAIN
                 .baseUri("http://localhost:8080/test")
                 .body(initialPlanData)
                 .when()
-                .post("/floors/" + floorId + "/planimetry")
+                .put("/floors/" + floorId + "/svg") // Use PUT and /svg path
                 .then()
-                .statusCode(201);
+                .log()
+                .ifValidationFails()
+                .statusCode(Response.Status.OK.getStatusCode()); // Expect OK (200) for PUT
 
         // Update floor plan via PUT
-        byte[] updatedPlanData = "Updated Plan Data Upd API".getBytes();
-        given().contentType(MediaType.APPLICATION_OCTET_STREAM)
+        String updatedPlanData = "<svg>Updated Plan Data Upd API</svg>"; // Use String
+        given().contentType(MediaType.TEXT_PLAIN) // Use TEXT_PLAIN
                 .baseUri("http://localhost:8080/test")
                 .body(updatedPlanData)
                 .when()
-                .put("/floors/" + floorId + "/planimetry")
+                .put("/floors/" + floorId + "/svg") // Use PUT and /svg path
                 .then()
                 .log()
                 .ifValidationFails()
                 .statusCode(Response.Status.OK.getStatusCode()); // Expect OK for update
 
         // Get the updated floor plan and verify
-        byte[] retrievedPlanData =
-                given().accept(MediaType.APPLICATION_OCTET_STREAM)
+        String retrievedPlanData =
+                given().accept(MediaType.TEXT_PLAIN) // Use TEXT_PLAIN
                         .baseUri("http://localhost:8080/test")
                         .when()
-                        .get("/floors/" + floorId + "/planimetry")
+                        .get("/floors/" + floorId + "/svg") // Use PUT and /svg path
                         .then()
                         .log()
                         .ifValidationFails()
                         .statusCode(Response.Status.OK.getStatusCode())
-                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .contentType(MediaType.TEXT_PLAIN) // Use TEXT_PLAIN
                         .extract()
-                        .asByteArray();
+                        .asString(); // Extract as String
 
-        assertArrayEquals(updatedPlanData, retrievedPlanData);
+        assertEquals(updatedPlanData, retrievedPlanData);
     }
 
     @Test
     public void testGetFloorPlanNotFound() {
         // Test getting plan for a non-existent floor
-        given().accept(MediaType.APPLICATION_OCTET_STREAM)
+        given().accept(MediaType.TEXT_PLAIN) // Change accept type
                 .baseUri("http://localhost:8080/test")
                 .when()
-                .get("/floors/999/planimetry") // Assuming floor 999 doesn't exist
+                .get("/floors/999/svg") // Change path to /svg
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -587,10 +604,10 @@ public class FloorResourceIT extends BaseResourceTest {
         floorId = floorDto.getId();
 
         // Try getting the plan for the floor that exists but has no plan
-        given().accept(MediaType.APPLICATION_OCTET_STREAM)
+        given().accept(MediaType.TEXT_PLAIN) // Change accept type
                 .baseUri("http://localhost:8080/test")
                 .when()
-                .get("/floors/" + floorId + "/planimetry")
+                .get("/floors/" + floorId + "/svg") // Change path to /svg
                 .then()
                 .log()
                 .ifValidationFails()
