@@ -33,6 +33,7 @@ public class SeatResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(number);
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -54,6 +55,7 @@ public class SeatResourceIT extends BaseResourceTest {
         roomPayload.setFloor(floorRef);
         OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(roomPayload)
                         .when()
                         .post("/rooms")
@@ -72,6 +74,7 @@ public class SeatResourceIT extends BaseResourceTest {
         empPayload.setOccupation(occupation);
         EmployeeDTO createdEmpDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(empPayload)
                         .when()
                         .post("/employees")
@@ -100,6 +103,7 @@ public class SeatResourceIT extends BaseResourceTest {
         // 3. Assert POST response (expecting SeatDTO)
         SeatDTO createdSeatDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(seatPayload)
                         .when()
                         .post("/seats")
@@ -119,7 +123,8 @@ public class SeatResourceIT extends BaseResourceTest {
         Long createdSeatId = createdSeatDto.getId();
 
         // 4. Get the created seat to verify (expecting SeatDTO)
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/seats/" + createdSeatId)
                 .then()
                 .log()
@@ -134,7 +139,8 @@ public class SeatResourceIT extends BaseResourceTest {
 
     @Test // No DB interaction needed
     public void testGetSeatNotFound() {
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/seats/999")
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
@@ -145,6 +151,7 @@ public class SeatResourceIT extends BaseResourceTest {
         Seat seat = new Seat();
         seat.setSeatNumber("NR1");
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(seat)
                 .when()
                 .post("/seats")
@@ -160,6 +167,7 @@ public class SeatResourceIT extends BaseResourceTest {
         invalidRoomRef.setId(999L); // Non-existent room ID
         seat.setRoom(invalidRoomRef);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(seat)
                 .when()
                 .post("/seats")
@@ -181,6 +189,7 @@ public class SeatResourceIT extends BaseResourceTest {
         roomRef1.setId(roomId);
         seat1Payload.setRoom(roomRef1);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(seat1Payload)
                 .when()
                 .post("/seats")
@@ -196,6 +205,7 @@ public class SeatResourceIT extends BaseResourceTest {
         roomRef2.setId(roomId);
         seat2Payload.setRoom(roomRef2);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(seat2Payload)
                 .when()
                 .post("/seats")
@@ -220,6 +230,7 @@ public class SeatResourceIT extends BaseResourceTest {
 
         SeatDTO createdSeatDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(initialSeatPayload)
                         .when()
                         .post("/seats")
@@ -241,6 +252,7 @@ public class SeatResourceIT extends BaseResourceTest {
 
         // Assert PUT response (expecting SeatDTO)
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(updatePayload)
                 .when()
                 .put("/seats/" + seatId)
@@ -272,6 +284,7 @@ public class SeatResourceIT extends BaseResourceTest {
 
         SeatDTO createdSeatDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(seatPayload)
                         .when()
                         .post("/seats")
@@ -282,7 +295,8 @@ public class SeatResourceIT extends BaseResourceTest {
         Long seatId = createdSeatDto.getId();
 
         // Delete seat via API
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .delete("/seats/" + seatId)
                 .then()
                 .log()
@@ -290,7 +304,8 @@ public class SeatResourceIT extends BaseResourceTest {
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
 
         // Verify it's gone
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/seats/" + seatId)
                 .then()
                 .log()
@@ -306,6 +321,7 @@ public class SeatResourceIT extends BaseResourceTest {
         dummyRoomRef.setId(1L); // Needs a room reference for validation
         seatNoNumber.setRoom(dummyRoomRef);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(seatNoNumber)
                 .when()
                 .post("/seats")
@@ -317,6 +333,7 @@ public class SeatResourceIT extends BaseResourceTest {
         seatEmptyNumber.setSeatNumber("");
         seatEmptyNumber.setRoom(dummyRoomRef);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(seatEmptyNumber)
                 .when()
                 .post("/seats")
@@ -340,6 +357,7 @@ public class SeatResourceIT extends BaseResourceTest {
         seatPayload.setRoom(roomRef);
         SeatDTO createdSeatDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(seatPayload)
                         .when()
                         .post("/seats")
@@ -352,16 +370,26 @@ public class SeatResourceIT extends BaseResourceTest {
         Long employeeId = createEmployeeForTest("Emp On Seat", "Tester");
 
         // Assign employee to seat using Employee endpoint
-        given().when()
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId, seatId)
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .put("/employees/" + employeeId + "/seats/" + seatId)
                 .then()
-                .statusCode(200);
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body("employeeId", equalTo(employeeId.intValue()))
+                .body("seatId", equalTo(seatId.intValue()))
+                .body("assigned", equalTo(true));
 
         // Verify seat is occupied
-        given().when().get("/seats/{id}", seatId).then().body("occupied", equalTo(true));
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .get("/seats/" + seatId)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body("employeeIds", hasItem(employeeId.intValue()));
 
         // Try deleting the seat - should fail (CONFLICT)
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .delete("/seats/" + seatId)
                 .then()
                 .log()
@@ -369,13 +397,18 @@ public class SeatResourceIT extends BaseResourceTest {
                 .statusCode(Response.Status.CONFLICT.getStatusCode());
 
         // Cleanup: Unassign employee first
-        given().when()
-                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId, seatId)
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .delete("/employees/" + employeeId + "/seats/" + seatId)
                 .then()
-                .statusCode(200);
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body("employeeId", equalTo(employeeId.intValue()))
+                .body("seatId", equalTo(seatId.intValue()))
+                .body("assigned", equalTo(false));
 
         // Now delete the seat - should succeed
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .delete("/seats/" + seatId)
                 .then()
                 .log()

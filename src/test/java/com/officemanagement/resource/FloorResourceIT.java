@@ -39,6 +39,7 @@ public class FloorResourceIT extends BaseResourceTest {
         // Create floor via POST and expect DTO
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -58,7 +59,8 @@ public class FloorResourceIT extends BaseResourceTest {
         assertNotNull(floorId);
 
         // Get the created floor and expect DTO
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/floors/" + floorId)
                 .then()
                 .log()
@@ -73,7 +75,8 @@ public class FloorResourceIT extends BaseResourceTest {
 
     @Test
     public void testGetFloorNotFound() {
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/floors/999") // Assuming 999 does not exist
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
@@ -98,6 +101,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floor1Payload.setName("Floor One Dup API");
         floor1Payload.setFloorNumber(1020); // Use a unique number for initial creation
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(floor1Payload)
                 .when()
                 .post("/floors")
@@ -109,6 +113,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floor2Payload.setName("Floor Two Dup API");
         floor2Payload.setFloorNumber(1020); // Duplicate number
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(floor2Payload)
                 .when()
                 .post("/floors")
@@ -143,6 +148,7 @@ public class FloorResourceIT extends BaseResourceTest {
         originalFloor.setFloorNumber(1030); // Unique number
         FloorDTO createdDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(originalFloor)
                         .when()
                         .post("/floors")
@@ -157,6 +163,7 @@ public class FloorResourceIT extends BaseResourceTest {
         updatePayload.setName("Updated Name Upd API");
         updatePayload.setFloorNumber(1040); // New unique number
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(updatePayload)
                 .when()
                 .put("/floors/" + floorId)
@@ -177,6 +184,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorPayload.setName("Non Existent Upd");
         floorPayload.setFloorNumber(999);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(floorPayload)
                 .when()
                 .put("/floors/999") // Assuming 999 does not exist
@@ -217,6 +225,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floor1.setFloorNumber(1050);
         FloorDTO dto1 =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floor1)
                         .when()
                         .post("/floors")
@@ -231,6 +240,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floor2.setFloorNumber(1060);
         FloorDTO dto2 =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floor2)
                         .when()
                         .post("/floors")
@@ -245,6 +255,7 @@ public class FloorResourceIT extends BaseResourceTest {
         updatePayload.setName("Floor Two UpdDup Updated API"); // Name change is fine
         updatePayload.setFloorNumber(1050); // Duplicate number
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(updatePayload)
                 .when()
                 .put("/floors/" + floor2Id)
@@ -279,6 +290,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorToDelete.setFloorNumber(1070);
         FloorDTO createdDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorToDelete)
                         .when()
                         .post("/floors")
@@ -289,7 +301,8 @@ public class FloorResourceIT extends BaseResourceTest {
         floorId = createdDto.getId();
 
         // Delete the floor via API
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .delete("/floors/" + floorId)
                 .then()
                 .log()
@@ -297,7 +310,8 @@ public class FloorResourceIT extends BaseResourceTest {
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
 
         // Verify it's gone via API
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/floors/" + floorId)
                 .then()
                 .log()
@@ -315,7 +329,8 @@ public class FloorResourceIT extends BaseResourceTest {
 
     @Test
     public void testDeleteFloorNotFound() {
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .delete("/floors/999") // Assuming 999 does not exist
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
@@ -353,6 +368,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorWithRoom.setFloorNumber(1080);
         FloorDTO floorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorWithRoom)
                         .when()
                         .post("/floors")
@@ -365,7 +381,8 @@ public class FloorResourceIT extends BaseResourceTest {
         // TODO: Add code here to create a Room associated with floorId via Room API
 
         // Try deleting the floor via API - should fail if rooms exist and constraint is enforced
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .delete("/floors/" + floorId)
                 .then()
                 .log()
@@ -400,6 +417,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorForPlan.setFloorNumber(1090);
         FloorDTO floorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorForPlan)
                         .when()
                         .post("/floors")
@@ -412,6 +430,7 @@ public class FloorResourceIT extends BaseResourceTest {
         // Create floor plan via POST
         byte[] planData = "Simple Plan Data CG".getBytes();
         given().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .baseUri("http://localhost:8080/test")
                 .body(planData)
                 .when()
                 .post("/floors/" + floorId + "/planimetry")
@@ -421,7 +440,8 @@ public class FloorResourceIT extends BaseResourceTest {
                 .statusCode(Response.Status.CREATED.getStatusCode());
 
         // Verify floor DTO now shows hasPlanimetry=true
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/floors/" + floorId)
                 .then()
                 .statusCode(200)
@@ -430,6 +450,7 @@ public class FloorResourceIT extends BaseResourceTest {
         // Get the floor plan
         byte[] retrievedPlanData =
                 given().accept(MediaType.APPLICATION_OCTET_STREAM)
+                        .baseUri("http://localhost:8080/test")
                         .when()
                         .get("/floors/" + floorId + "/planimetry")
                         .then()
@@ -472,6 +493,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorForUpdate.setFloorNumber(1100);
         FloorDTO floorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorForUpdate)
                         .when()
                         .post("/floors")
@@ -482,6 +504,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorId = floorDto.getId();
         byte[] initialPlanData = "Initial Plan Data Upd API".getBytes();
         given().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .baseUri("http://localhost:8080/test")
                 .body(initialPlanData)
                 .when()
                 .post("/floors/" + floorId + "/planimetry")
@@ -491,6 +514,7 @@ public class FloorResourceIT extends BaseResourceTest {
         // Update floor plan via PUT
         byte[] updatedPlanData = "Updated Plan Data Upd API".getBytes();
         given().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .baseUri("http://localhost:8080/test")
                 .body(updatedPlanData)
                 .when()
                 .put("/floors/" + floorId + "/planimetry")
@@ -502,6 +526,7 @@ public class FloorResourceIT extends BaseResourceTest {
         // Get the updated floor plan and verify
         byte[] retrievedPlanData =
                 given().accept(MediaType.APPLICATION_OCTET_STREAM)
+                        .baseUri("http://localhost:8080/test")
                         .when()
                         .get("/floors/" + floorId + "/planimetry")
                         .then()
@@ -519,6 +544,7 @@ public class FloorResourceIT extends BaseResourceTest {
     public void testGetFloorPlanNotFound() {
         // Test getting plan for a non-existent floor
         given().accept(MediaType.APPLICATION_OCTET_STREAM)
+                .baseUri("http://localhost:8080/test")
                 .when()
                 .get("/floors/999/planimetry") // Assuming floor 999 doesn't exist
                 .then()
@@ -550,6 +576,7 @@ public class FloorResourceIT extends BaseResourceTest {
         floorWithoutPlan.setFloorNumber(1110);
         FloorDTO floorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorWithoutPlan)
                         .when()
                         .post("/floors")
@@ -561,6 +588,7 @@ public class FloorResourceIT extends BaseResourceTest {
 
         // Try getting the plan for the floor that exists but has no plan
         given().accept(MediaType.APPLICATION_OCTET_STREAM)
+                .baseUri("http://localhost:8080/test")
                 .when()
                 .get("/floors/" + floorId + "/planimetry")
                 .then()

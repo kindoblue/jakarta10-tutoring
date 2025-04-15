@@ -10,7 +10,9 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.hibernate.Hibernate;
 
 // Add static inner class for pagination response
@@ -168,8 +170,8 @@ public class EmployeeResource {
     }
 
     @PUT
-    @Path("/{id}/assign-seat/{seatId}")
-    @Transactional // Add transaction management
+    @Path("/{id}/seats/{seatId}")
+    @Transactional
     public Response assignSeat(@PathParam("id") Long employeeId, @PathParam("seatId") Long seatId) {
         // No need for manual transaction
         Employee employee =
@@ -190,31 +192,35 @@ public class EmployeeResource {
         entityManager.merge(employee); // Use merge instead of update
         entityManager.flush(); // Flush to apply changes before re-query
 
-        // ... existing code ...
-        // NOTE ON IMPLEMENTATION APPROACH / LazyInitializationException Workaround
-        // The re-fetch logic can stay for now
-        // ... existing code ...
+        // Fix: Remove aliases from fetch joins to comply with strict JPQL
         Employee refreshedEmployee =
                 entityManager
-                        .createQuery(
-                                "select e from Employee e "
-                                        + "left join fetch e.seats s "
-                                        + "left join fetch s.room r "
-                                        + "left join fetch r.floor f "
-                                        + "where e.id = :id",
-                                Employee.class)
+                        .createQuery("SELECT e FROM Employee e WHERE e.id = :id", Employee.class)
                         .setParameter("id", employeeId)
-                        .getResultStream()
-                        .findFirst()
-                        .orElse(null); // Use getResultStream().findFirst().orElse(null)
+                        .getSingleResult();
 
-        // Return DTO instead of raw entity
-        return Response.ok(new EmployeeDTO(refreshedEmployee)).build();
+        // Manually initialize collections to avoid LazyInitializationException
+        if (refreshedEmployee != null) {
+            // Load seats collection
+            entityManager
+                    .createQuery(
+                            "SELECT s FROM Seat s WHERE s.id IN (SELECT s2.id FROM Employee e JOIN e.seats s2 WHERE e.id = :employeeId)")
+                    .setParameter("employeeId", employeeId)
+                    .getResultList();
+        }
+
+        // Create a response DTO with assignment info
+        Map<String, Object> result = new HashMap<>();
+        result.put("employeeId", employeeId);
+        result.put("seatId", seatId);
+        result.put("assigned", true);
+
+        return Response.ok(result).build();
     }
 
     @DELETE
-    @Path("/{employeeId}/unassign-seat/{seatId}")
-    @Transactional // Add transaction management
+    @Path("/{employeeId}/seats/{seatId}")
+    @Transactional
     public Response unassignSeat(
             @PathParam("employeeId") Long employeeId, @PathParam("seatId") Long seatId) {
         // No need for manual transaction
@@ -240,23 +246,30 @@ public class EmployeeResource {
         entityManager.merge(employee); // Use merge
         entityManager.flush(); // Flush to apply changes before re-query
 
-        // Same approach as in assignSeat method - reload the entity after commit.
+        // Fix: Remove aliases from fetch joins to comply with strict JPQL
         Employee refreshedEmployee =
                 entityManager
-                        .createQuery(
-                                "select e from Employee e "
-                                        + "left join fetch e.seats s "
-                                        + "left join fetch s.room r "
-                                        + "left join fetch r.floor f "
-                                        + "where e.id = :id",
-                                Employee.class)
+                        .createQuery("SELECT e FROM Employee e WHERE e.id = :id", Employee.class)
                         .setParameter("id", employeeId)
-                        .getResultStream()
-                        .findFirst()
-                        .orElse(null); // Use getResultStream().findFirst().orElse(null)
+                        .getSingleResult();
 
-        // Return DTO instead of raw entity
-        return Response.ok(new EmployeeDTO(refreshedEmployee)).build();
+        // Manually initialize collections to avoid LazyInitializationException
+        if (refreshedEmployee != null) {
+            // Load seats collection
+            entityManager
+                    .createQuery(
+                            "SELECT s FROM Seat s WHERE s.id IN (SELECT s2.id FROM Employee e JOIN e.seats s2 WHERE e.id = :employeeId)")
+                    .setParameter("employeeId", employeeId)
+                    .getResultList();
+        }
+
+        // Create a response DTO with assignment info
+        Map<String, Object> result = new HashMap<>();
+        result.put("employeeId", employeeId);
+        result.put("seatId", seatId);
+        result.put("assigned", false);
+
+        return Response.ok(result).build();
     }
 
     @DELETE

@@ -25,6 +25,7 @@ public class StatsResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(number);
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -45,6 +46,7 @@ public class StatsResourceIT extends BaseResourceTest {
         roomPayload.setFloor(floorRef);
         OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(roomPayload)
                         .when()
                         .post("/rooms")
@@ -62,6 +64,7 @@ public class StatsResourceIT extends BaseResourceTest {
         empPayload.setOccupation(occupation);
         EmployeeDTO createdEmpDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(empPayload)
                         .when()
                         .post("/employees")
@@ -81,6 +84,7 @@ public class StatsResourceIT extends BaseResourceTest {
         seatPayload.setRoom(roomRef);
         SeatDTO createdSeatDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(seatPayload)
                         .when()
                         .post("/seats")
@@ -113,6 +117,7 @@ public class StatsResourceIT extends BaseResourceTest {
         // Get initial stats using jsonPath()
         int initialFloors =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .when()
                         .get("/stats")
                         .then()
@@ -121,6 +126,7 @@ public class StatsResourceIT extends BaseResourceTest {
                         .getInt("totalFloors");
         int initialRooms =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .when()
                         .get("/stats")
                         .then()
@@ -129,6 +135,7 @@ public class StatsResourceIT extends BaseResourceTest {
                         .getInt("totalOffices");
         int initialSeats =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .when()
                         .get("/stats")
                         .then()
@@ -137,6 +144,7 @@ public class StatsResourceIT extends BaseResourceTest {
                         .getInt("totalSeats");
         int initialEmployees =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .when()
                         .get("/stats")
                         .then()
@@ -151,13 +159,15 @@ public class StatsResourceIT extends BaseResourceTest {
         Long employeeId = createEmployeeForTest("Stats Employee API", "Stat Worker API");
 
         // Assign employee to seat (optional for basic count check, but good practice)
-        given().when()
-                .put("/employees/{empId}/assign-seat/{seatId}", employeeId, seatId)
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .put("/employees/" + employeeId + "/seats/" + seatId)
                 .then()
                 .statusCode(200);
 
         // Verify updated stats (check increments from initial state)
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/stats") // Use relative path
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())

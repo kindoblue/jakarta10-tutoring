@@ -28,6 +28,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(number);
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -50,6 +51,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         roomPayload.setFloor(floorRef);
         OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(roomPayload)
                         .when()
                         .post("/rooms")
@@ -71,6 +73,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         seatPayload.setRoom(roomRef);
         SeatDTO createdSeatDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(seatPayload)
                         .when()
                         .post("/seats")
@@ -125,6 +128,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("height", 120.7f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/" + roomId + "/geometry")
@@ -148,6 +152,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("width", 180.0f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/" + roomId + "/geometry")
@@ -172,6 +177,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("rotation", 45.0f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/" + roomId + "/seats/" + seatId + "/geometry")
@@ -199,6 +205,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("rotation", 90.0f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/" + roomId + "/seats/" + seatId + "/geometry")
@@ -216,6 +223,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("x", 10.0f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/999/geometry")
@@ -232,6 +240,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("x", 10.0f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/" + roomId + "/seats/999/geometry")
@@ -254,6 +263,7 @@ public class GeometryResourceIT extends BaseResourceTest {
         geometryUpdate.put("x", 10.0f);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(geometryUpdate)
                 .when()
                 .patch("/rooms/" + room1Id + "/seats/" + seat2Id + "/geometry")

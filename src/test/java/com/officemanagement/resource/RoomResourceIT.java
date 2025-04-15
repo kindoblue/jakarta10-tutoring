@@ -26,6 +26,7 @@ public class RoomResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(2020); // Using unique number for test isolation
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -47,6 +48,7 @@ public class RoomResourceIT extends BaseResourceTest {
         // Expect OfficeRoomDTO from POST /rooms
         OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(roomPayload)
                         .when()
                         .post("/rooms") // Use relative path
@@ -60,7 +62,8 @@ public class RoomResourceIT extends BaseResourceTest {
                         .as(OfficeRoomDTO.class); // Extract as OfficeRoomDTO
 
         // 3. Get the created room to verify
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/rooms/" + createdRoomDto.getId()) // Use DTO getter for ID
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
@@ -74,7 +77,8 @@ public class RoomResourceIT extends BaseResourceTest {
 
     @Test
     public void testGetRoomNotFound() {
-        given().when()
+        given().baseUri("http://localhost:8080/test")
+                .when()
                 .get("/rooms/999") // Use relative path, assuming 999 not found
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
@@ -88,6 +92,7 @@ public class RoomResourceIT extends BaseResourceTest {
         // room.setFloor(null); // Floor is missing
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(room)
                 .when()
                 .post("/rooms") // Use relative path
@@ -105,6 +110,7 @@ public class RoomResourceIT extends BaseResourceTest {
         room.setFloor(invalidFloorRef);
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(room)
                 .when()
                 .post("/rooms") // Use relative path
@@ -120,6 +126,7 @@ public class RoomResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(2080); // Unique floor number
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -136,6 +143,7 @@ public class RoomResourceIT extends BaseResourceTest {
         floorRef1.setId(createdFloorDto.getId());
         room1Payload.setFloor(floorRef1);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(room1Payload)
                 .when()
                 .post("/rooms")
@@ -150,6 +158,7 @@ public class RoomResourceIT extends BaseResourceTest {
         floorRef2.setId(createdFloorDto.getId());
         room2Payload.setFloor(floorRef2);
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(room2Payload)
                 .when()
                 .post("/rooms") // Use relative path
@@ -165,6 +174,7 @@ public class RoomResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(2090); // Unique floor number
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -181,6 +191,7 @@ public class RoomResourceIT extends BaseResourceTest {
         // Expect OfficeRoomDTO from POST /rooms
         OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(roomPayload)
                         .when()
                         .post("/rooms")
@@ -196,14 +207,16 @@ public class RoomResourceIT extends BaseResourceTest {
         updatePayload.setFloor(floorRef); // Keep the same floor
 
         given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
                 .body(updatePayload)
                 .when()
-                .put("/rooms/" + createdRoomDto.getId()) // Use DTO getter for ID
+                .put("/rooms/" + createdRoomDto.getId())
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("id", equalTo(createdRoomDto.getId().intValue()))
                 .body("name", equalTo("Updated Room Name"))
-                .body("roomNumber", equalTo("Upd2"));
+                .body("roomNumber", equalTo("Upd2"))
+                .body("floorId", equalTo(createdFloorDto.getId().intValue()));
     }
 
     @Test
@@ -214,6 +227,7 @@ public class RoomResourceIT extends BaseResourceTest {
         floorPayload.setFloorNumber(2100); // Unique floor number
         FloorDTO createdFloorDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(floorPayload)
                         .when()
                         .post("/floors")
@@ -222,15 +236,14 @@ public class RoomResourceIT extends BaseResourceTest {
                         .extract()
                         .as(FloorDTO.class);
         OfficeRoom roomPayload = new OfficeRoom();
-        roomPayload.setName("Delete Me");
+        roomPayload.setName("Room To Delete");
         roomPayload.setRoomNumber("Del1");
         Floor floorRef = new Floor();
         floorRef.setId(createdFloorDto.getId());
         roomPayload.setFloor(floorRef);
-
-        // Create the initial room and extract its ID from the DTO response
         OfficeRoomDTO createdRoomDto =
                 given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
                         .body(roomPayload)
                         .when()
                         .post("/rooms")
@@ -238,46 +251,45 @@ public class RoomResourceIT extends BaseResourceTest {
                         .statusCode(Response.Status.CREATED.getStatusCode())
                         .extract()
                         .as(OfficeRoomDTO.class);
-        Long createdRoomId = createdRoomDto.getId();
-        assertNotNull(createdRoomId);
 
-        // Delete the room
-        given().when()
-                .delete("/rooms/" + createdRoomId)
+        // Delete room and verify 204 No Content
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .delete("/rooms/" + createdRoomDto.getId())
                 .then()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
 
-        // Verify it's gone
-        given().when()
-                .get("/rooms/" + createdRoomId)
+        // Verify it's gone (404 Not Found)
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .get("/rooms/" + createdRoomDto.getId())
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
     public void testUpdateRoomNotFound() {
-        OfficeRoom updatePayload = new OfficeRoom();
-        updatePayload.setName("Updated Room Name");
-        updatePayload.setRoomNumber("UpdNotFound");
-        // Floor is needed for valid payload, but the room ID is the target
+        OfficeRoom room = new OfficeRoom();
+        room.setName("Room That Doesn't Exist");
+        room.setRoomNumber("NotFound1");
         Floor dummyFloor = new Floor();
-        dummyFloor.setId(
-                1L); // Assume some floor ID might exist, or use one created in another test if
-        // state persists
-        updatePayload.setFloor(dummyFloor);
+        dummyFloor.setId(999L);
+        room.setFloor(dummyFloor);
 
         given().contentType(ContentType.JSON)
-                .body(updatePayload)
+                .baseUri("http://localhost:8080/test")
+                .body(room)
                 .when()
-                .put("/rooms/9999") // Non-existent ID
+                .put("/rooms/999") // Non-existent room ID
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
     public void testDeleteRoomNotFound() {
-        given().when()
-                .delete("/rooms/9999") // Non-existent ID
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .delete("/rooms/999") // Non-existent room ID
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
