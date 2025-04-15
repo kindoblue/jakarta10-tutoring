@@ -106,6 +106,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                     entityManager.flush();
                 });
 
+        // Test valid search with partial name
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "lice Search")
                 .when()
@@ -116,6 +117,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .body("content[0].fullName", equalTo("Alice Search Wonderland"))
                 .body("totalElements", equalTo(1));
 
+        // Test valid search with partial occupation
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "Search Arch")
                 .when()
@@ -126,6 +128,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .body("content[0].fullName", equalTo("Bob Search Builder"))
                 .body("totalElements", equalTo(1));
 
+        // Test valid search with valid pagination parameters
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "Search")
                 .queryParam("page", 0)
@@ -367,6 +370,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
 
     @Test
     public void testSearchEmployeesWithInvalidParameters() {
+        // Test with null search parameter (should default to empty string and return all employees)
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", (String) null)
                 .when()
@@ -375,6 +379,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("content", notNullValue());
 
+        // Test with empty search parameter (should return all employees)
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "")
                 .when()
@@ -383,6 +388,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .statusCode(Response.Status.OK.getStatusCode())
                 .body("content", notNullValue());
 
+        // Test with negative page (should return 400 Bad Request)
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "test")
                 .queryParam("page", -1)
@@ -391,6 +397,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
 
+        // Test with zero size (should return 400 Bad Request)
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "test")
                 .queryParam("size", 0)
@@ -399,6 +406,7 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
 
+        // Test with negative size (should return 400 Bad Request)
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "test")
                 .queryParam("size", -1)
@@ -652,34 +660,49 @@ public class EmployeeResourceIT extends BaseResourceTest {
                     employeeId.value = employee.getId();
                 });
 
+        // Test assigning a seat to an employee - should succeed
         given().baseUri("http://localhost:8080/test")
                 .put("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
+                
+        // Test reassigning the same seat - should succeed (idempotent operation)
         given().baseUri("http://localhost:8080/test")
                 .put("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
+                
+        // Test assigning a non-existent seat - should return NOT_FOUND
         given().baseUri("http://localhost:8080/test")
                 .put("/employees/{empId}/seats/{seatId}", employeeId.value, 9999L)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+                
+        // Test assigning a seat to a non-existent employee - should return NOT_FOUND
         given().baseUri("http://localhost:8080/test")
                 .put("/employees/{empId}/seats/{seatId}", 8888L, seatId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+                
+        // Test unassigning a seat from an employee - should succeed
         given().baseUri("http://localhost:8080/test")
                 .delete("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
+                
+        // Test unassigning the same seat again - should succeed (idempotent operation)
         given().baseUri("http://localhost:8080/test")
                 .delete("/employees/{empId}/seats/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
+                
+        // Test unassigning a non-existent seat - should return NOT_FOUND 
         given().baseUri("http://localhost:8080/test")
                 .delete("/employees/{empId}/seats/{seatId}", employeeId.value, 9999L)
                 .then()
-                .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+                
+        // Test unassigning a seat from a non-existent employee - should return NOT_FOUND
         given().baseUri("http://localhost:8080/test")
                 .delete("/employees/{empId}/seats/{seatId}", 8888L, seatId.value)
                 .then()
