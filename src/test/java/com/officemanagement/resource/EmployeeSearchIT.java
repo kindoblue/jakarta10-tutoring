@@ -32,9 +32,9 @@ public class EmployeeSearchIT extends BaseResourceTest {
                     entityManager.flush();
                 });
 
-        // Test valid search with partial name
+        // Test valid search with partial name - use URL encoded space (%20)
         given().baseUri("http://localhost:8080/test")
-                .queryParam("search", "lice Search")
+                .queryParam("search", "lice%20Search")
                 .when()
                 .get("/employees/search")
                 .then()
@@ -43,9 +43,9 @@ public class EmployeeSearchIT extends BaseResourceTest {
                 .body("content[0].fullName", equalTo("Alice Search Wonderland"))
                 .body("totalElements", equalTo(1));
 
-        // Test valid search with partial occupation
+        // Test valid search with partial occupation - use URL encoded space (%20)
         given().baseUri("http://localhost:8080/test")
-                .queryParam("search", "Search Arch")
+                .queryParam("search", "Search%20Arch")
                 .when()
                 .get("/employees/search")
                 .then()
@@ -67,4 +67,4 @@ public class EmployeeSearchIT extends BaseResourceTest {
                 .body("totalElements", equalTo(2))
                 .body("totalPages", equalTo(2));
     }
-} 
+}
