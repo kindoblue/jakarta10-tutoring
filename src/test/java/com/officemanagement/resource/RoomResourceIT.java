@@ -10,10 +10,13 @@ import com.officemanagement.model.Floor;
 import com.officemanagement.model.OfficeRoom;
 import io.restassured.http.ContentType;
 import jakarta.ws.rs.core.Response;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for the RoomResource endpoints. */
-public class RoomResourceTest extends BaseResourceTest {
+public class RoomResourceIT extends BaseResourceTest {
+
+    private static final Logger log = Logger.getLogger(RoomResourceIT.class.getName());
 
     @Test
     public void testCreateAndGetRoom() {

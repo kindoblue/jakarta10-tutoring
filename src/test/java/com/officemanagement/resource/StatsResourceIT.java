@@ -17,7 +17,7 @@ import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for the StatsResource endpoint. */
-public class StatsResourceTest extends BaseResourceTest {
+public class StatsResourceIT extends BaseResourceTest {
 
     private Long createFloorForTest(String name, int number) {
         Floor floorPayload = new Floor();
@@ -110,11 +110,39 @@ public class StatsResourceTest extends BaseResourceTest {
                 .body("totalSeats", equalTo(0));
         */
 
-        // Get initial stats
-        int initialFloors = given().when().get("/stats").then().extract().path("totalFloors");
-        int initialRooms = given().when().get("/stats").then().extract().path("totalOffices");
-        int initialSeats = given().when().get("/stats").then().extract().path("totalSeats");
-        int initialEmployees = given().when().get("/stats").then().extract().path("totalEmployees");
+        // Get initial stats using jsonPath()
+        int initialFloors =
+                given().contentType(ContentType.JSON)
+                        .when()
+                        .get("/stats")
+                        .then()
+                        .extract()
+                        .jsonPath()
+                        .getInt("totalFloors");
+        int initialRooms =
+                given().contentType(ContentType.JSON)
+                        .when()
+                        .get("/stats")
+                        .then()
+                        .extract()
+                        .jsonPath()
+                        .getInt("totalOffices");
+        int initialSeats =
+                given().contentType(ContentType.JSON)
+                        .when()
+                        .get("/stats")
+                        .then()
+                        .extract()
+                        .jsonPath()
+                        .getInt("totalSeats");
+        int initialEmployees =
+                given().contentType(ContentType.JSON)
+                        .when()
+                        .get("/stats")
+                        .then()
+                        .extract()
+                        .jsonPath()
+                        .getInt("totalEmployees");
 
         // Add data using API helpers
         Long floorId = createFloorForTest("Stats Floor API", 3010);

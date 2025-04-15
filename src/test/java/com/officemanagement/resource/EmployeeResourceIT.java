@@ -11,10 +11,13 @@ import com.officemanagement.model.OfficeRoom;
 import com.officemanagement.model.Seat;
 import io.restassured.http.ContentType;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
-public class EmployeeResourceTest extends BaseResourceTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class EmployeeResourceIT extends BaseResourceTest {
 
     @Inject ObjectMapper objectMapper;
 
@@ -32,9 +35,9 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testCreateAndGetEmployee() throws Exception {
-        Long createdEmployeeId;
-        entityManager.getTransaction().begin();
+        Long createdEmployeeId = null;
         try {
             Employee newEmployee = new Employee();
             newEmployee.setFullName("John Doe CreateGet");
@@ -44,15 +47,9 @@ public class EmployeeResourceTest extends BaseResourceTest {
             entityManager.flush();
             createdEmployeeId = newEmployee.getId();
             assertNotNull(createdEmployeeId, "Created Employee ID should not be null via EM");
-
-            entityManager.getTransaction().commit();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
 
         given().baseUri("http://localhost:8080/test")
                 .when()
@@ -98,8 +95,8 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testSearchEmployees() {
-        entityManager.getTransaction().begin();
         try {
             Employee emp1 = new Employee();
             emp1.setFullName("Alice Search Wonderland");
@@ -111,15 +108,9 @@ public class EmployeeResourceTest extends BaseResourceTest {
             emp2.setOccupation("Search Architect");
             entityManager.persist(emp2);
             entityManager.flush();
-
-            entityManager.getTransaction().commit();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
 
         given().baseUri("http://localhost:8080/test")
                 .queryParam("search", "lice Search")
@@ -155,6 +146,7 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testCreateEmployee() {
         Employee employee = new Employee();
         employee.setFullName("John Doe Create");
@@ -173,9 +165,9 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testGetEmployee() {
-        Long employeeId;
-        entityManager.getTransaction().begin();
+        Long employeeId = null;
         try {
             Employee emp = new Employee();
             emp.setFullName("Jane Smith Get Test");
@@ -184,15 +176,9 @@ public class EmployeeResourceTest extends BaseResourceTest {
             entityManager.flush();
             employeeId = emp.getId();
             assertNotNull(employeeId, "Employee ID should be set after setup");
-
-            entityManager.getTransaction().commit();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
 
         given().baseUri("http://localhost:8080/test")
                 .when()
@@ -217,72 +203,77 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testAssignAndUnassignSeat() {
-        Long employeeId;
-        Long seatId;
-        entityManager.getTransaction().begin();
-        try {
-            Employee employee = new Employee();
-            employee.setFullName("Test Assign Employee");
-            employee.setOccupation("Tester");
-            entityManager.persist(employee);
+        final Holder<Long> floorId = new Holder<>();
+        final Holder<Long> roomId = new Holder<>();
+        final Holder<Long> seatId = new Holder<>();
+        final Holder<Long> employeeId = new Holder<>();
 
+        try {
             Floor floor = new Floor();
-            floor.setName("Test Floor AAUS");
-            floor.setFloorNumber(10);
+            floor.setFloorNumber(100);
+            floor.setName("Test Floor AssignUnassign");
             entityManager.persist(floor);
+            entityManager.flush();
+            floorId.value = floor.getId();
 
             OfficeRoom room = new OfficeRoom();
-            room.setName("Test Room AAUS");
-            room.setRoomNumber("AAUS101");
+            room.setRoomNumber("R100A");
+            room.setName("Test Room AssignUnassign");
             room.setFloor(floor);
             entityManager.persist(room);
+            entityManager.flush();
+            roomId.value = room.getId();
 
             Seat seat = new Seat();
-            seat.setSeatNumber("Test Seat AAUS");
+            seat.setSeatNumber("S100A1");
             seat.setRoom(room);
             entityManager.persist(seat);
-
             entityManager.flush();
-            employeeId = employee.getId();
-            seatId = seat.getId();
-            assertNotNull(employeeId);
-            assertNotNull(seatId);
+            seatId.value = seat.getId();
 
-            entityManager.getTransaction().commit();
+            Employee employee = new Employee();
+            employee.setFullName("Assign Unassign Test User");
+            employee.setOccupation("Assignee");
+            entityManager.persist(employee);
+            entityManager.flush();
+            employeeId.value = employee.getId();
+
+            assertNotNull(seatId.value, "Seat ID must be set after setup");
+            assertNotNull(employeeId.value, "Employee ID must be set after setup");
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
+
+        assertNotNull(floorId.value, "Floor ID missing");
+        assertNotNull(roomId.value, "Room ID missing");
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId + "/assign-seat/" + seatId)
+                .put("/employees/" + employeeId.value + "/assign-seat/" + seatId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .get("/employees/" + employeeId)
+                .get("/employees/" + employeeId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("seatIds", hasItem(seatId.intValue()));
+                .body("seatIds", hasItem(seatId.value.intValue()));
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId + "/unassign-seat/" + seatId)
+                .put("/employees/" + employeeId.value + "/unassign-seat/" + seatId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .get("/employees/" + employeeId)
+                .get("/employees/" + employeeId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("seatIds", not(hasItem(seatId.intValue())));
+                .body("seatIds", not(hasItem(seatId.value.intValue())));
     }
 
     @Test
@@ -331,63 +322,57 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testAssignSeatWithInvalidIds() {
-        long nonExistentEmployeeId = 9999L;
-        long nonExistentSeatId = 8888L;
-        Long validEmployeeId;
-        Long validSeatId;
+        final Holder<Long> floorId = new Holder<>();
+        final Holder<Long> roomId = new Holder<>();
+        final Holder<Long> employeeId = new Holder<>();
+        long nonExistentSeatId = 9999L;
 
-        entityManager.getTransaction().begin();
         try {
-            Employee emp = new Employee();
-            emp.setFullName("Valid Emp Invalid Assign");
-            emp.setOccupation("Temp");
-            entityManager.persist(emp);
-
             Floor floor = new Floor();
-            floor.setName("Inv Floor");
-            floor.setFloorNumber(99);
+            floor.setFloorNumber(101);
+            floor.setName("Test Floor Invalid Assign");
             entityManager.persist(floor);
+            entityManager.flush();
+            floorId.value = floor.getId();
+
             OfficeRoom room = new OfficeRoom();
-            room.setName("Inv Room");
-            room.setRoomNumber("INV1");
+            room.setRoomNumber("R101A");
+            room.setName("Test Room Invalid Assign");
             room.setFloor(floor);
             entityManager.persist(room);
-            Seat seat = new Seat();
-            seat.setSeatNumber("Inv Seat");
-            seat.setRoom(room);
-            entityManager.persist(seat);
-
             entityManager.flush();
-            validEmployeeId = emp.getId();
-            validSeatId = seat.getId();
-            assertNotNull(validEmployeeId);
-            assertNotNull(validSeatId);
+            roomId.value = room.getId();
 
-            entityManager.getTransaction().commit();
+            Employee employee = new Employee();
+            employee.setFullName("Invalid Assign Test User");
+            employee.setOccupation("Invalid Assignee");
+            entityManager.persist(employee);
+            entityManager.flush();
+            employeeId.value = employee.getId();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
+
+        assertNotNull(floorId.value, "Floor ID missing");
+        assertNotNull(roomId.value, "Room ID missing");
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + validEmployeeId + "/assign-seat/" + nonExistentSeatId)
+                .put("/employees/" + employeeId.value + "/assign-seat/" + nonExistentSeatId)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + nonExistentEmployeeId + "/assign-seat/" + validSeatId)
+                .put("/employees/" + nonExistentSeatId + "/assign-seat/" + employeeId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + nonExistentEmployeeId + "/assign-seat/" + nonExistentSeatId)
+                .put("/employees/" + nonExistentSeatId + "/assign-seat/" + nonExistentSeatId)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -436,315 +421,327 @@ public class EmployeeResourceTest extends BaseResourceTest {
     }
 
     @Test
+    @Transactional
     public void testAssignMultipleSeatsToOneEmployee() {
-        Long employeeId;
-        Long seatId1;
-        Long seatId2;
-        entityManager.getTransaction().begin();
-        try {
-            Employee employee = new Employee();
-            employee.setFullName("Multi Assign Emp");
-            employee.setOccupation("Manager");
-            entityManager.persist(employee);
+        final Holder<Long> floorId = new Holder<>();
+        final Holder<Long> roomId = new Holder<>();
+        final Holder<Long> seatId1 = new Holder<>();
+        final Holder<Long> seatId2 = new Holder<>();
+        final Holder<Long> employeeId = new Holder<>();
 
+        try {
             Floor floor = new Floor();
-            floor.setName("Multi Floor");
-            floor.setFloorNumber(20);
+            floor.setFloorNumber(102);
+            floor.setName("Test Floor MultiSeat");
             entityManager.persist(floor);
+            entityManager.flush();
+            floorId.value = floor.getId();
+
             OfficeRoom room = new OfficeRoom();
-            room.setName("Multi Room");
-            room.setRoomNumber("MULTI1");
+            room.setRoomNumber("R102A");
+            room.setName("Test Room MultiSeat");
             room.setFloor(floor);
             entityManager.persist(room);
+            entityManager.flush();
+            roomId.value = room.getId();
 
             Seat seat1 = new Seat();
-            seat1.setSeatNumber("MULTI-S1");
+            seat1.setSeatNumber("MS1");
             seat1.setRoom(room);
             entityManager.persist(seat1);
+            entityManager.flush();
+            seatId1.value = seat1.getId();
+
             Seat seat2 = new Seat();
-            seat2.setSeatNumber("MULTI-S2");
+            seat2.setSeatNumber("MS2");
             seat2.setRoom(room);
             entityManager.persist(seat2);
-
             entityManager.flush();
-            employeeId = employee.getId();
-            seatId1 = seat1.getId();
-            seatId2 = seat2.getId();
-            assertNotNull(employeeId);
-            assertNotNull(seatId1);
-            assertNotNull(seatId2);
+            seatId2.value = seat2.getId();
 
-            entityManager.getTransaction().commit();
+            Employee employee = new Employee();
+            employee.setFullName("Multi Seat Employee");
+            employee.setOccupation("Collector");
+            entityManager.persist(employee);
+            entityManager.flush();
+            employeeId.value = employee.getId();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId + "/assign-seat/" + seatId1)
+                .put("/employees/" + employeeId.value + "/assign-seat/" + seatId1.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .put("/employees/" + employeeId + "/assign-seat/" + seatId2)
+                .put("/employees/" + employeeId.value + "/assign-seat/" + seatId2.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode());
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .get("/employees/" + employeeId)
+                .get("/employees/" + employeeId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("seatIds", contains(seatId2.intValue()))
-                .body("seatIds", not(contains(seatId1.intValue())));
+                .body("seatIds", contains(seatId2.value.intValue()))
+                .body("seatIds", not(contains(seatId1.value.intValue())));
     }
 
     @Test
+    @Transactional
     public void testComplexSeatAssignmentScenarios() {
-        Long empId1;
-        Long empId2;
-        Long seatId1;
-        Long seatId2;
-        Long seatId3;
-        entityManager.getTransaction().begin();
-        try {
-            Floor floorA = new Floor();
-            floorA.setName("Complex Floor A");
-            floorA.setFloorNumber(30);
-            entityManager.persist(floorA);
-            Floor floorB = new Floor();
-            floorB.setName("Complex Floor B");
-            floorB.setFloorNumber(31);
-            entityManager.persist(floorB);
-            OfficeRoom roomA1 = new OfficeRoom();
-            roomA1.setName("Complex Room A1");
-            roomA1.setRoomNumber("CA1");
-            roomA1.setFloor(floorA);
-            entityManager.persist(roomA1);
-            OfficeRoom roomB1 = new OfficeRoom();
-            roomB1.setName("Complex Room B1");
-            roomB1.setRoomNumber("CB1");
-            roomB1.setFloor(floorB);
-            entityManager.persist(roomB1);
-            Seat seat1 = new Seat();
-            seat1.setSeatNumber("CA1-S1");
-            seat1.setRoom(roomA1);
-            entityManager.persist(seat1);
-            Seat seat2 = new Seat();
-            seat2.setSeatNumber("CA1-S2");
-            seat2.setRoom(roomA1);
-            entityManager.persist(seat2);
-            Seat seat3 = new Seat();
-            seat3.setSeatNumber("CB1-S1");
-            seat3.setRoom(roomB1);
-            entityManager.persist(seat3);
-            Employee emp1 = new Employee();
-            emp1.setFullName("Complex Emp 1");
-            emp1.setOccupation("Analyst");
-            entityManager.persist(emp1);
-            Employee emp2 = new Employee();
-            emp2.setFullName("Complex Emp 2");
-            emp2.setOccupation("Manager");
-            entityManager.persist(emp2);
-            entityManager.flush();
-            empId1 = emp1.getId();
-            empId2 = emp2.getId();
-            seatId1 = seat1.getId();
-            seatId2 = seat2.getId();
-            seatId3 = seat3.getId();
-            assertNotNull(empId1);
-            assertNotNull(empId2);
-            assertNotNull(seatId1);
-            assertNotNull(seatId2);
-            assertNotNull(seatId3);
+        final Holder<Long> floorId = new Holder<>();
+        final Holder<Long> roomId = new Holder<>();
+        final Holder<Long> seatId1 = new Holder<>();
+        final Holder<Long> seatId2 = new Holder<>();
+        final Holder<Long> seatId3 = new Holder<>();
+        final Holder<Long> employeeId1 = new Holder<>();
+        final Holder<Long> employeeId2 = new Holder<>();
 
-            entityManager.getTransaction().commit();
+        try {
+            Floor floor = new Floor();
+            floor.setFloorNumber(103);
+            floor.setName("Test Floor Complex");
+            entityManager.persist(floor);
+            entityManager.flush();
+            floorId.value = floor.getId();
+
+            OfficeRoom room = new OfficeRoom();
+            room.setRoomNumber("R103A");
+            room.setName("Test Room Complex");
+            room.setFloor(floor);
+            entityManager.persist(room);
+            entityManager.flush();
+            roomId.value = room.getId();
+
+            Seat seat1 = new Seat();
+            seat1.setSeatNumber("CS1");
+            seat1.setRoom(room);
+            entityManager.persist(seat1);
+            seatId1.value = seat1.getId();
+            Seat seat2 = new Seat();
+            seat2.setSeatNumber("CS2");
+            seat2.setRoom(room);
+            entityManager.persist(seat2);
+            seatId2.value = seat2.getId();
+            Seat seat3 = new Seat();
+            seat3.setSeatNumber("CS3");
+            seat3.setRoom(room);
+            entityManager.persist(seat3);
+            seatId3.value = seat3.getId();
+
+            Employee emp1 = new Employee();
+            emp1.setFullName("Complex User One");
+            emp1.setOccupation("Role A");
+            entityManager.persist(emp1);
+            employeeId1.value = emp1.getId();
+            Employee emp2 = new Employee();
+            emp2.setFullName("Complex User Two");
+            emp2.setOccupation("Role B");
+            entityManager.persist(emp2);
+            employeeId2.value = emp2.getId();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
 
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId1, seatId1)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId1.value, seatId1.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .get("/employees/{empId}", empId1)
+                .get("/employees/{empId}", employeeId1.value)
                 .then()
-                .body("seatIds", contains(seatId1.intValue()));
+                .body("seatIds", contains(seatId1.value.intValue()));
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId2, seatId2)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId2.value, seatId2.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .get("/employees/{empId}", empId2)
+                .get("/employees/{empId}", employeeId2.value)
                 .then()
-                .body("seatIds", contains(seatId2.intValue()));
+                .body("seatIds", contains(seatId2.value.intValue()));
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId2, seatId1)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId2.value, seatId1.value)
                 .then()
                 .statusCode(Response.Status.CONFLICT.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId1, seatId3)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId1.value, seatId3.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .get("/employees/{empId}", empId1)
+                .get("/employees/{empId}", employeeId1.value)
                 .then()
-                .body("seatIds", contains(seatId3.intValue()))
-                .body("seatIds", not(contains(seatId1.intValue())));
+                .body("seatIds", contains(seatId3.value.intValue()))
+                .body("seatIds", not(contains(seatId1.value.intValue())));
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", empId2, seatId2)
+                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId2.value, seatId2.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .get("/employees/{empId}", empId2)
+                .get("/employees/{empId}", employeeId2.value)
                 .then()
                 .body("seatIds", empty());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", empId1, seatId2)
+                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId1.value, seatId2.value)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
     }
 
     @Test
+    @Transactional
     public void testSeatAssignmentEdgeCases() {
-        Long empId;
-        Long seatId;
-        Long nonExistentSeatId = 9999L;
-        Long nonExistentEmpId = 8888L;
-        entityManager.getTransaction().begin();
+        final Holder<Long> floorId = new Holder<>();
+        final Holder<Long> roomId = new Holder<>();
+        final Holder<Long> seatId = new Holder<>();
+        final Holder<Long> employeeId = new Holder<>();
+
         try {
-            Employee employee = new Employee();
-            employee.setFullName("Edge Case Emp");
-            employee.setOccupation("Edge");
-            entityManager.persist(employee);
             Floor floor = new Floor();
-            floor.setName("Edge Floor");
-            floor.setFloorNumber(40);
+            floor.setFloorNumber(104);
+            floor.setName("Test Floor Edge");
             entityManager.persist(floor);
+            entityManager.flush();
+            floorId.value = floor.getId();
+
             OfficeRoom room = new OfficeRoom();
-            room.setName("Edge Room");
-            room.setRoomNumber("EDGE1");
+            room.setRoomNumber("R104A");
+            room.setName("Test Room Edge");
             room.setFloor(floor);
             entityManager.persist(room);
+            entityManager.flush();
+            roomId.value = room.getId();
+
             Seat seat = new Seat();
-            seat.setSeatNumber("EDGE-S1");
+            seat.setSeatNumber("ES1");
             seat.setRoom(room);
             entityManager.persist(seat);
             entityManager.flush();
-            empId = employee.getId();
-            seatId = seat.getId();
-            assertNotNull(empId);
-            assertNotNull(seatId);
+            seatId.value = seat.getId();
 
-            entityManager.getTransaction().commit();
+            Employee employee = new Employee();
+            employee.setFullName("Edge Case User");
+            employee.setOccupation("Tester");
+            entityManager.persist(employee);
+            entityManager.flush();
+            employeeId.value = employee.getId();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
 
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId, seatId)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId, seatId)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", empId, nonExistentSeatId)
+                .put("/employees/{empId}/assign-seat/{seatId}", employeeId.value, 9999L)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/assign-seat/{seatId}", nonExistentEmpId, seatId)
+                .put("/employees/{empId}/assign-seat/{seatId}", 8888L, seatId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", empId, seatId)
+                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", empId, seatId)
+                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId.value, seatId.value)
                 .then()
                 .statusCode(200);
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", empId, nonExistentSeatId)
+                .put("/employees/{empId}/unassign-seat/{seatId}", employeeId.value, 9999L)
                 .then()
                 .statusCode(Response.Status.BAD_REQUEST.getStatusCode());
         given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/unassign-seat/{seatId}", nonExistentEmpId, seatId)
+                .put("/employees/{empId}/unassign-seat/{seatId}", 8888L, seatId.value)
                 .then()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
+    @Transactional
     public void testDeleteEmployeeWithAssignedSeats() {
-        Long employeeId;
-        Long seatId;
-        entityManager.getTransaction().begin();
+        final Holder<Long> floorId = new Holder<>();
+        final Holder<Long> roomId = new Holder<>();
+        final Holder<Long> seatId = new Holder<>();
+        final Holder<Long> employeeId = new Holder<>();
+
         try {
-            Employee employee = new Employee();
-            employee.setFullName("Delete Me Emp");
-            employee.setOccupation("Deleter");
-            entityManager.persist(employee);
             Floor floor = new Floor();
-            floor.setName("Delete Floor");
-            floor.setFloorNumber(50);
+            floor.setFloorNumber(600);
+            floor.setName("Delete Test Floor");
             entityManager.persist(floor);
+            entityManager.flush();
+            floorId.value = floor.getId();
+
             OfficeRoom room = new OfficeRoom();
-            room.setName("Delete Room");
-            room.setRoomNumber("DEL1");
+            room.setRoomNumber("R600A");
+            room.setName("Delete Test Room");
             room.setFloor(floor);
             entityManager.persist(room);
+            entityManager.flush();
+            roomId.value = room.getId();
+
             Seat seat = new Seat();
-            seat.setSeatNumber("DEL-S1");
+            seat.setSeatNumber("S600A1");
             seat.setRoom(room);
             entityManager.persist(seat);
             entityManager.flush();
+            seatId.value = seat.getId();
+
+            Employee employee = new Employee();
+            employee.setFullName("To Be Deleted User");
+            employee.setOccupation("Temporary");
+            entityManager.persist(employee);
+            entityManager.flush();
+            employeeId.value = employee.getId();
+
             employee.addSeat(seat);
             entityManager.merge(employee);
             entityManager.flush();
-            employeeId = employee.getId();
-            seatId = seat.getId();
-            assertNotNull(employeeId);
-            assertNotNull(seatId);
-
-            entityManager.getTransaction().commit();
         } catch (Exception e) {
-            if (entityManager.getTransaction().isActive()) {
-                entityManager.getTransaction().rollback();
-            }
             throw e;
         }
-        entityManager.clear();
+
+        try {
+            Employee empCheck = entityManager.find(Employee.class, employeeId.value);
+            assertNotNull(empCheck, "Employee should exist after setup");
+            assertFalse(empCheck.getSeats().isEmpty(), "Employee should have assigned seat");
+
+            Seat seatCheck = entityManager.find(Seat.class, seatId.value);
+            assertNotNull(seatCheck, "Seat should exist after setup");
+            assertTrue(seatCheck.isOccupied(), "Seat should be occupied");
+        } catch (Exception e) {
+            throw new RuntimeException("Setup verification failed", e);
+        }
 
         given().baseUri("http://localhost:8080/test")
                 .when()
-                .delete("/employees/{id}", employeeId)
+                .delete("/employees/" + employeeId.value)
                 .then()
+                .log()
+                .ifValidationFails()
                 .statusCode(Response.Status.NO_CONTENT.getStatusCode());
 
-        given().baseUri("http://localhost:8080/test")
-                .when()
-                .get("/employees/{id}", employeeId)
-                .then()
-                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+        try {
+            Employee deletedEmp = entityManager.find(Employee.class, employeeId.value);
+            assertNull(deletedEmp, "Employee should be deleted");
 
-        Seat dbSeat = entityManager.find(Seat.class, seatId);
-        assertNotNull(dbSeat, "Seat should still exist");
-        assertNull(dbSeat.getEmployee(), "Seat should not be assigned to any employee");
+            Seat seatAfterDelete = entityManager.find(Seat.class, seatId.value);
+            assertNotNull(seatAfterDelete, "Seat should still exist");
+            assertFalse(
+                    seatAfterDelete.isOccupied(),
+                    "Seat should be unassigned after employee deletion");
+        } catch (Exception e) {
+            throw new RuntimeException("Post-deletion verification failed", e);
+        }
     }
 
     @Test

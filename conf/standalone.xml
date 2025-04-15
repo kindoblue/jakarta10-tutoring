@@ -125,7 +125,18 @@
         <subsystem xmlns="urn:jboss:domain:bean-validation:1.0"/>
         <subsystem xmlns="urn:jboss:domain:datasources:7.0">
             <datasources>
+                <datasource jndi-name="java:jboss/datasources/PostgresDS" pool-name="PostgresDS_Pool">
+                    <connection-url>jdbc:postgresql://db:5432/postgres</connection-url>
+                    <driver>postgresql</driver>
+                    <security>
+                        <user-name>postgres</user-name>
+                        <password>postgres</password>
+                    </security>
+                </datasource>
                 <drivers>
+                    <driver name="postgresql" module="org.postgresql.jdbc">
+                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                    </driver>
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
                     </driver>
@@ -137,13 +148,17 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:discovery:1.0"/>
         <subsystem xmlns="urn:jboss:domain:distributable-ejb:1.0" default-bean-management="default">
-            <local-bean-management name="default" cache-container="ejb"/>
-            <local-client-mappings-registry cache-container="ejb" cache="client-mappings"/>
+            <infinispan-bean-management name="default" max-active-beans="10000" cache-container="ejb"/>
+            <infinispan-client-mappings-registry cache-container="ejb" cache="client-mappings"/>
+            <infinispan-timer-management name="persistent" cache-container="ejb" cache="persistent" max-active-timers="10000"/>
+            <infinispan-timer-management name="transient" cache-container="ejb" cache="transient" max-active-timers="10000"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:distributable-web:4.0" default-session-management="default" default-single-sign-on-management="default">
-            <local-session-management name="default" cache-container="web" />
-            <local-single-sign-on-management name="default" cache-container="web" cache="sso"/>
-            <local-routing cache-container="web" cache="routing"/>
+            <infinispan-session-management name="default" cache-container="web" granularity="SESSION">
+                <primary-owner-affinity/>
+            </infinispan-session-management>
+            <infinispan-single-sign-on-management name="default" cache-container="web" cache="sso"/>
+            <infinispan-routing cache-container="web" cache="routing"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:ee:6.0">
             <spec-descriptor-property-replacement>false</spec-descriptor-property-replacement>
@@ -169,7 +184,7 @@
                 <stateless>
                     <bean-instance-pool-ref pool-name="slsb-strict-max-pool"/>
                 </stateless>
-                <stateful default-access-timeout="5000" cache-ref="simple" passivation-disabled-cache-ref="simple"/>
+                <stateful default-access-timeout="5000" cache-ref="distributable" passivation-disabled-cache-ref="simple"/>
                 <singleton default-access-timeout="5000"/>
             </session-bean>
             <mdb>
@@ -337,47 +352,69 @@
         <subsystem xmlns="urn:wildfly:elytron-oidc-client:2.0"/>
         <subsystem xmlns="urn:wildfly:health:1.0" security-enabled="false"/>
         <subsystem xmlns="urn:jboss:domain:infinispan:14.0">
-            <cache-container name="web" default-cache="local" marshaller="PROTOSTREAM" modules="org.wildfly.clustering.web.infinispan">
-                <local-cache name="local">
+            <cache-container name="web" default-cache="repl" marshaller="PROTOSTREAM" modules="org.wildfly.clustering.web.infinispan">
+                <transport lock-timeout="60000"/>
+                <replicated-cache name="repl">
                     <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
                     <expiration interval="0"/>
                     <file-store/>
-                </local-cache>
-                <local-cache name="sso">
+                </replicated-cache>
+                <replicated-cache name="sso">
                     <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
                     <expiration interval="0"/>
-                </local-cache>
-                <local-cache name="routing">
+                </replicated-cache>
+                <replicated-cache name="routing">
                     <expiration interval="0"/>
-                </local-cache>
+                </replicated-cache>
+                <distributed-cache name="dist">
+                    <locking isolation="REPEATABLE_READ"/>
+                    <transaction mode="BATCH"/>
+                    <expiration interval="0"/>
+                    <file-store passivation="true" purge="true"/>
+                </distributed-cache>
             </cache-container>
-            <cache-container name="ejb" default-cache="local" marshaller="PROTOSTREAM" aliases="sfsb" modules="org.wildfly.clustering.ejb.infinispan">
-                <local-cache name="local">
-                    <locking isolation="REPEATABLE_READ"/>
-                    <transaction mode="BATCH"/>
-                    <heap-memory size="10000"/>
-                    <expiration interval="0"/>
-                    <file-store/>
-                </local-cache>
+            <cache-container name="ejb" default-cache="repl" marshaller="PROTOSTREAM" aliases="sfsb" modules="org.wildfly.clustering.ejb.infinispan">
+                <transport lock-timeout="60000"/>
                 <local-cache name="transient">
                     <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
                     <expiration interval="0"/>
                     <file-store passivation="true" purge="true"/>
                 </local-cache>
-                <local-cache name="client-mappings">
+                <replicated-cache name="repl">
+                    <locking isolation="REPEATABLE_READ"/>
+                    <transaction mode="BATCH"/>
+                    <heap-memory size="10000"/>
                     <expiration interval="0"/>
-                </local-cache>
-            </cache-container>
-            <cache-container name="server" default-cache="default" marshaller="PROTOSTREAM" aliases="singleton cluster" modules="org.wildfly.clustering.singleton.server">
-                <local-cache name="default">
+                    <file-store/>
+                </replicated-cache>
+                <replicated-cache name="client-mappings">
+                    <expiration interval="0"/>
+                </replicated-cache>
+                <distributed-cache name="persistent">
+                    <locking isolation="REPEATABLE_READ"/>
                     <transaction mode="BATCH"/>
                     <expiration interval="0"/>
-                </local-cache>
+                    <file-store passivation="true"/>
+                </distributed-cache>
+                <distributed-cache name="dist">
+                    <locking isolation="REPEATABLE_READ"/>
+                    <transaction mode="BATCH"/>
+                    <expiration interval="0"/>
+                    <file-store passivation="true" purge="true"/>
+                </distributed-cache>
+            </cache-container>
+            <cache-container name="server" default-cache="default" marshaller="PROTOSTREAM" aliases="singleton cluster" modules="org.wildfly.clustering.singleton.server">
+                <transport lock-timeout="60000"/>
+                <replicated-cache name="default">
+                    <transaction mode="BATCH"/>
+                    <expiration interval="0"/>
+                </replicated-cache>
             </cache-container>
             <cache-container name="hibernate" default-cache="local-query" marshaller="JBOSS" modules="org.infinispan.hibernate-cache">
+                <transport lock-timeout="60000"/>
                 <local-cache name="local-query">
                     <heap-memory size="10000"/>
                     <expiration max-idle="100000"/>
@@ -385,13 +422,13 @@
                 <local-cache name="pending-puts">
                     <expiration max-idle="60000"/>
                 </local-cache>
-                <local-cache name="entity">
+                <invalidation-cache name="entity">
                     <heap-memory size="10000"/>
                     <expiration max-idle="100000"/>
-                </local-cache>
-                <local-cache name="timestamps">
+                </invalidation-cache>
+                <replicated-cache name="timestamps">
                     <expiration interval="0"/>
-                </local-cache>
+                </replicated-cache>
             </cache-container>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:io:3.0">
@@ -418,44 +455,42 @@
             <cached-connection-manager/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jdr:1.0"/>
-        <subsystem xmlns="urn:jboss:domain:jgroups:8.0">
-            <channels>
-                <!-- Removed channel configuration -->
-                <!-- Disabling channel for testing -->
-                <!-- <channel name="ee" stack="tcp" cluster="ejb"/> -->
+        <subsystem xmlns="urn:jboss:domain:jgroups:9.0">
+            <channels default="ee">
+                <channel name="ee" stack="tcp"/>
             </channels>
             <stacks>
-                <stack name="udp">
-                    <transport type="UDP" socket-binding="jgroups-udp"/>
-                    <protocol type="PING"/>
+                <stack name="tcp">
+                    <transport type="TCP" socket-binding="jgroups-tcp"/>
+                    <protocol type="TCPPING">
+                        <property name="initial_hosts">127.0.0.1[7600]</property>
+                        <property name="num_initial_members">1</property>
+                    </protocol>
+                    <protocol type="RED"/>
                     <protocol type="MERGE3"/>
-                    <protocol type="FD_SOCK" socket-binding="jgroups-udp-fd"/>
-                    <protocol type="FD_ALL"/>
-                    <protocol type="VERIFY_SUSPECT"/>
+                    <socket-protocol type="FD_SOCK2" socket-binding="jgroups-tcp-fd"/>
+                    <protocol type="FD_ALL3"/>
+                    <protocol type="VERIFY_SUSPECT2"/>
                     <protocol type="pbcast.NAKACK2"/>
                     <protocol type="UNICAST3"/>
                     <protocol type="pbcast.STABLE"/>
                     <protocol type="pbcast.GMS"/>
                     <protocol type="UFC"/>
                     <protocol type="MFC"/>
-                    <protocol type="FRAG3"/>
+                    <protocol type="FRAG4"/>
                 </stack>
-                <stack name="tcp">
-                    <transport type="TCP" socket-binding="jgroups-tcp"/>
-                    <protocol type="TCPPING">
-                        <property name="initial_hosts">localhost[7600]</property>
-                        <property name="port_range">0</property>
-                        <property name="timeout">2000</property>
-                    </protocol>
-                    <protocol type="MPING" socket-binding="jgroups-mping"/>
+                <stack name="udp">
+                    <transport type="UDP" socket-binding="jgroups-udp"/>
+                    <protocol type="RED"/>
                     <protocol type="MERGE3"/>
-                    <protocol type="FD_SOCK" socket-binding="jgroups-tcp-fd"/>
-                    <protocol type="FD"/>
-                    <protocol type="VERIFY_SUSPECT"/>
+                    <socket-protocol type="FD_SOCK2" socket-binding="jgroups-udp-fd"/>
+                    <protocol type="FD_ALL3"/>
+                    <protocol type="VERIFY_SUSPECT2"/>
                     <protocol type="pbcast.NAKACK2"/>
                     <protocol type="UNICAST3"/>
                     <protocol type="pbcast.STABLE"/>
-                    <protocol type="pbcast.GMS" join_timeout="3000"/>
+                    <protocol type="pbcast.GMS"/>
+                    <protocol type="UFC"/>
                     <protocol type="MFC"/>
                     <protocol type="FRAG4"/>
                 </stack>
@@ -553,7 +588,7 @@
             <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
         </interface>
         <interface name="private">
-            <inet-address value="${jboss.bind.address.private:127.0.0.1}"/>
+            <inet-address value="${jboss.bind.address.private:0.0.0.0}"/>
         </interface>
         <interface name="public">
             <inet-address value="${jboss.bind.address:127.0.0.1}"/>

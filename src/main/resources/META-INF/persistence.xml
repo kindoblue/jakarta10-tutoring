@@ -4,9 +4,9 @@
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
 
-    <persistence-unit name="testPU" transaction-type="JTA">
+    <persistence-unit name="primary" transaction-type="JTA">
         <!-- Use JTA data source for container-managed transactions -->
-        <jta-data-source>java:jboss/datasources/TestDS</jta-data-source>
+        <jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
 
         <!-- List all your entity classes -->
         <class>com.officemanagement.model.Employee</class>
@@ -16,8 +16,7 @@
         <class>com.officemanagement.model.Seat</class>
 
         <properties>
-            <!-- Hibernate properties -->
-            <!-- Automatically drop and create the schema on deployment for tests -->
+            <!-- Automatically drop and create the schema on startup -->
             <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
             <!-- Show SQL executed by Hibernate (optional, useful for debugging) -->
             <property name="hibernate.show_sql" value="true"/>

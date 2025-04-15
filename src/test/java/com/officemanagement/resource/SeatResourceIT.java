@@ -15,9 +15,11 @@ import com.officemanagement.model.Seat;
 import io.restassured.http.ContentType;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 /** Integration tests for the SeatResource endpoints. */
-public class SeatResourceTest extends BaseResourceTest {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class SeatResourceIT extends BaseResourceTest {
 
     // Helper class for IDs - might still be useful for API setup
     private static class Holder<T> {

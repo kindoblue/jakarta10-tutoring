@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 
 /** Integration tests for the FloorResource endpoints. */
 // Removed @QuarkusTest
-public class FloorResourceTest extends BaseResourceTest {
+public class FloorResourceIT extends BaseResourceTest {
 
     // Removed @Inject EntityManager testEntityManager;
 
@@ -27,6 +27,8 @@ public class FloorResourceTest extends BaseResourceTest {
     private static class Holder<T> {
         T value;
     }
+
+    private static Long floorId;
 
     @Test
     public void testCreateAndGetFloor() {
@@ -52,17 +54,17 @@ public class FloorResourceTest extends BaseResourceTest {
                         .extract()
                         .as(FloorDTO.class);
 
-        Long createdFloorId = createdFloorDto.getId();
-        assertNotNull(createdFloorId);
+        floorId = createdFloorDto.getId();
+        assertNotNull(floorId);
 
         // Get the created floor and expect DTO
         given().when()
-                .get("/floors/" + createdFloorId)
+                .get("/floors/" + floorId)
                 .then()
                 .log()
                 .ifValidationFails()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("id", equalTo(createdFloorId.intValue()))
+                .body("id", equalTo(floorId.intValue()))
                 .body("name", equalTo("Test Floor CG"))
                 .body("floorNumber", equalTo(101))
                 .body("roomIds", empty())
@@ -148,7 +150,7 @@ public class FloorResourceTest extends BaseResourceTest {
                         .statusCode(Response.Status.CREATED.getStatusCode())
                         .extract()
                         .as(FloorDTO.class);
-        Long floorId = createdDto.getId();
+        floorId = createdDto.getId();
 
         // Update the floor via API, expect DTO
         Floor updatePayload = new Floor();
@@ -284,7 +286,7 @@ public class FloorResourceTest extends BaseResourceTest {
                         .statusCode(201)
                         .extract()
                         .as(FloorDTO.class);
-        Long floorId = createdDto.getId();
+        floorId = createdDto.getId();
 
         // Delete the floor via API
         given().when()
@@ -358,7 +360,7 @@ public class FloorResourceTest extends BaseResourceTest {
                         .statusCode(201)
                         .extract()
                         .as(FloorDTO.class);
-        Long floorId = floorDto.getId();
+        floorId = floorDto.getId();
 
         // TODO: Add code here to create a Room associated with floorId via Room API
 
@@ -405,7 +407,7 @@ public class FloorResourceTest extends BaseResourceTest {
                         .statusCode(201)
                         .extract()
                         .as(FloorDTO.class);
-        Long floorId = floorDto.getId();
+        floorId = floorDto.getId();
 
         // Create floor plan via POST
         byte[] planData = "Simple Plan Data CG".getBytes();
@@ -477,7 +479,7 @@ public class FloorResourceTest extends BaseResourceTest {
                         .statusCode(201)
                         .extract()
                         .as(FloorDTO.class);
-        Long floorId = floorDto.getId();
+        floorId = floorDto.getId();
         byte[] initialPlanData = "Initial Plan Data Upd API".getBytes();
         given().contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(initialPlanData)
@@ -555,7 +557,7 @@ public class FloorResourceTest extends BaseResourceTest {
                         .statusCode(201)
                         .extract()
                         .as(FloorDTO.class);
-        Long floorId = floorDto.getId();
+        floorId = floorDto.getId();
 
         // Try getting the plan for the floor that exists but has no plan
         given().accept(MediaType.APPLICATION_OCTET_STREAM)

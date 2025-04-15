@@ -121,7 +121,38 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+            <!-- Explicitly manage Maven core dependencies for ShrinkWrap compatibility -->
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-core</artifactId>
+                <version>3.6.3</version>
+                <scope>provided</scope> <!-- Should not be needed at runtime, only for resolver -->
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-model-builder</artifactId>
+                <version>3.6.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-settings</artifactId>
+                <version>3.6.3</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.maven</groupId>
+                <artifactId>maven-settings-builder</artifactId>
+                <version>3.6.3</version>
+                <scope>provided</scope>
+            </dependency>
             <!-- Removed explicit definitions, relying on BOMs -->
+            <!-- JBoss Log Manager -->
+            <dependency>
+                <groupId>org.jboss.logmanager</groupId>
+                <artifactId>jboss-logmanager</artifactId>
+                <version>2.1.12.Final</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -221,6 +252,40 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- ShrinkWrap Resolver for Arquillian deployment -->
+        <dependency>
+            <groupId>org.jboss.shrinkwrap.resolver</groupId>
+            <artifactId>shrinkwrap-resolver-depchain</artifactId>
+            <!-- Version managed by dependencyManagement -->
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- PostgreSQL driver needed for ShrinkWrap test deployment -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.3</version> <!-- Align with version used in Dockerfile if possible -->
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JBoss Log Manager -->
+        <dependency>
+            <groupId>org.jboss.logmanager</groupId>
+            <artifactId>jboss-logmanager</artifactId>
+            <!-- Version should now be managed by dependencyManagement -->
+            <!-- <version>2.1.12.Final</version> -->
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Added Jackson Datatype JSR310 for Java 8 Date/Time -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <!-- Version should be managed by EAP BOM -->
+            <!-- Scope defaults to compile -->
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -278,7 +343,7 @@
                 </executions>
                 <configuration>
                     <systemPropertyVariables>
-                        <serverConfig>standalone-ha.xml</serverConfig>
+                        <serverConfig>arquillian-standalone.xml</serverConfig>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <!-- Set JBOSS_HOME for managed container -->
                         <!-- Ensure this points to a valid JBoss EAP 8 / WildFly
@@ -337,7 +402,7 @@
                         <artifactId>maven-failsafe-plugin</artifactId>
                         <configuration>
                             <systemPropertyVariables>
-                                <serverConfig>standalone-ha.xml</serverConfig>
+                                <serverConfig>arquillian-standalone.xml</serverConfig>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                                 <!-- Set JBOSS_HOME for managed container -->
                                 <!-- Ensure this points to a valid JBoss EAP 8 / WildFly

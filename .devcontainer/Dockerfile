@@ -73,10 +73,11 @@ USER root
 
 # Download PostgreSQL JDBC Driver
 RUN curl -L -o /tmp/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
+RUN chown jboss:jboss /tmp/postgresql.jar
 
 # Install Maven
 RUN microdnf update -y && \
-    microdnf install -y maven git postgresql && \
+    microdnf install -y maven git postgresql tar && \
     microdnf clean all
 
 # Change jboss user shell to /bin/bash
@@ -92,12 +93,8 @@ RUN chmod -R ug+rwX $JBOSS_HOME
 
 # Copy custom configuration and define PostgreSQL module
 COPY --chown=jboss:root conf/standalone.xml $JBOSS_HOME/standalone/configuration/
-RUN $JBOSS_HOME/bin/jboss-cli.sh --commands="\
-    embed-server --std-out=echo,\
-    module add --name=org.postgresql.jdbc --resources=/tmp/postgresql.jar --dependencies=jakarta.api,jakarta.resource.api,jakarta.transaction.api,\
-    /subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql.jdbc,driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource),\
-    stop-embedded-server"
-RUN rm /tmp/postgresql.jar
+RUN $JBOSS_HOME/bin/jboss-cli.sh --commands="embed-server --std-out=echo,module add --name=org.postgresql.jdbc --resources=/tmp/postgresql.jar --dependencies=jakarta.api\\,jakarta.resource.api\\,jakarta.transaction.api,stop-embedded-server" && \
+    rm /tmp/postgresql.jar
 
 EXPOSE 8080 8787 9990
 

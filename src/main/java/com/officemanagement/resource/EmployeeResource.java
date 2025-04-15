@@ -10,7 +10,6 @@ import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.hibernate.Hibernate;
 
@@ -157,7 +156,6 @@ public class EmployeeResource {
         }
 
         // Use EntityManager, no need for manual transaction
-        employee.setCreatedAt(LocalDateTime.now());
         entityManager.persist(employee);
         entityManager.flush(); // Ensure ID is generated before returning
 
