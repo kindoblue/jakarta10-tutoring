@@ -21,11 +21,6 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SeatResourceIT extends BaseResourceTest {
 
-    // Helper class for IDs - might still be useful for API setup
-    private static class Holder<T> {
-        T value;
-    }
-
     // Helper method to create a Floor via API for setup
     private Long createFloorForTest(String name, int number) {
         Floor floorPayload = new Floor();

@@ -14,13 +14,10 @@ import io.restassured.http.ContentType;
 import jakarta.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests specifically for the geometry PATCH endpoints in RoomResource. */
 public class GeometryResourceIT extends BaseResourceTest {
-
-    private static final Logger log = Logger.getLogger(GeometryResourceIT.class.getName());
 
     private Long createFloorForTest(String name, int number) {
         Floor floorPayload = new Floor();

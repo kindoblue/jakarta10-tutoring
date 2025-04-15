@@ -71,17 +71,6 @@ public class FloorResourceIT extends BaseResourceTest {
 
     @Test
     public void testCreateFloorDuplicateNumber() {
-        // Removed QuarkusTransaction block for data setup
-        /*
-        QuarkusTransaction.requiringNew()
-                .run(
-                        () -> {
-                            Floor floor1 = new Floor();
-                            floor1.setName("Floor One Dup");
-                            floor1.setFloorNumber(102);
-                            testEntityManager.persist(floor1);
-                        });
-        */
 
         // Setup: Create the first floor using the API
         Floor floor1Payload = new Floor();
@@ -170,16 +159,17 @@ public class FloorResourceIT extends BaseResourceTest {
         Floor floor1 = new Floor();
         floor1.setName("Floor One UpdDup API");
         floor1.setFloorNumber(1050);
-        FloorDTO dto1 =
-                given().contentType(ContentType.JSON)
-                        .baseUri("http://localhost:8080/test")
-                        .body(floor1)
-                        .when()
-                        .post("/floors")
-                        .then()
-                        .statusCode(201)
-                        .extract()
-                        .as(FloorDTO.class);
+
+        given().contentType(ContentType.JSON)
+                .baseUri("http://localhost:8080/test")
+                .body(floor1)
+                .when()
+                .post("/floors")
+                .then()
+                .statusCode(201)
+                .extract()
+                .as(FloorDTO.class);
+
         Floor floor2 = new Floor();
         floor2.setName("Floor Two UpdDup API");
         floor2.setFloorNumber(1060);
