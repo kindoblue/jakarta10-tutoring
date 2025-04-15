@@ -2,7 +2,6 @@ package com.officemanagement.resource;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 import com.officemanagement.model.Employee;
 import jakarta.ws.rs.core.Response;
@@ -11,10 +10,6 @@ import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class EmployeeSearchIT extends BaseResourceTest {
-
-    private static class Holder<T> {
-        T value;
-    }
 
     @Test
     public void testSearchEmployees() {
