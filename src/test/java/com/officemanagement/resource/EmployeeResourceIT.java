@@ -472,8 +472,10 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .get("/employees/" + employeeId.value)
                 .then()
                 .statusCode(Response.Status.OK.getStatusCode())
-                .body("seatIds", contains(seatId2.value.intValue()))
-                .body("seatIds", not(contains(seatId1.value.intValue())));
+                .body("seatIds", hasSize(2))
+                .body(
+                        "seatIds",
+                        containsInAnyOrder(seatId1.value.intValue(), seatId2.value.intValue()));
     }
 
     @Test
