@@ -552,27 +552,53 @@ public class EmployeeResourceIT extends BaseResourceTest {
                 .get("/employees/{empId}", employeeId2.value)
                 .then()
                 .body("seatIds", contains(seatId2.value.intValue()));
+
+        // Assign occupied seat1 to employee2 -> Should succeed (multiple employees per seat allowed)
         given().baseUri("http://localhost:8080/test")
                 .put("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId1.value)
                 .then()
-                .statusCode(Response.Status.CONFLICT.getStatusCode());
-        given().baseUri("http://localhost:8080/test")
-                .put("/employees/{empId}/seats/{seatId}", employeeId1.value, seatId3.value)
-                .then()
-                .statusCode(200);
+                .statusCode(Response.Status.OK.getStatusCode()); // Expect OK
+
+        // Verify employee1 still has seat1
         given().baseUri("http://localhost:8080/test")
                 .get("/employees/{empId}", employeeId1.value)
                 .then()
-                .body("seatIds", contains(seatId3.value.intValue()))
-                .body("seatIds", not(contains(seatId1.value.intValue())));
-        given().baseUri("http://localhost:8080/test")
-                .delete("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId2.value)
-                .then()
-                .statusCode(200);
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body("seatIds", contains(seatId1.value.intValue())); // employee1 should still have seat1
+
+        // Verify employee2 now has seat1 and seat2
         given().baseUri("http://localhost:8080/test")
                 .get("/employees/{empId}", employeeId2.value)
                 .then()
-                .body("seatIds", empty());
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body(
+                        "seatIds",
+                        containsInAnyOrder(seatId1.value.intValue(), seatId2.value.intValue()));
+
+        // Assign unoccupied seat3 to employee1
+        given().baseUri("http://localhost:8080/test")
+                .put("/employees/{empId}/seats/{seatId}", employeeId1.value, seatId3.value)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode());
+        given().baseUri("http://localhost:8080/test")
+                .get("/employees/{empId}", employeeId1.value)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                // employee1 should now have seat1 and seat3
+                .body("seatIds", containsInAnyOrder(seatId1.value.intValue(), seatId3.value.intValue()));
+
+        // Unassign seat2 from employee2
+        given().baseUri("http://localhost:8080/test")
+                .delete("/employees/{empId}/seats/{seatId}", employeeId2.value, seatId2.value)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode());
+        given().baseUri("http://localhost:8080/test")
+                .get("/employees/{empId}", employeeId2.value)
+                .then()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body("seatIds", contains(seatId1.value.intValue())); // employee2 should only have seat1 left
+
+        // Try unassigning seat2 (unassigned for emp1) from employee1 -> Bad Request (or OK?)
         given().baseUri("http://localhost:8080/test")
                 .delete("/employees/{empId}/seats/{seatId}", employeeId1.value, seatId2.value)
                 .then()
