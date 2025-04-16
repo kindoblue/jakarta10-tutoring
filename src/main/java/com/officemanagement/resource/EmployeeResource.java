@@ -299,6 +299,16 @@ public class EmployeeResource {
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("10") int size) {
 
+        // Debug logging for received parameters
+        System.out.println(
+                "[DEBUG] /employees/search called with page="
+                        + page
+                        + ", size="
+                        + size
+                        + ", search='"
+                        + searchTerm
+                        + "'");
+
         // Add validation for pagination parameters
         if (page < 0) {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -326,7 +336,7 @@ public class EmployeeResource {
                         .getSingleResult();
 
         String query =
-                "SELECT e FROM Employee e WHERE LOWER(e.fullName) LIKE LOWER(:searchTerm) OR LOWER(e.occupation) LIKE LOWER(:searchTerm) ORDER BY e.fullName";
+                "SELECT DISTINCT e FROM Employee e LEFT JOIN FETCH e.seats WHERE LOWER(e.fullName) LIKE LOWER(:searchTerm) OR LOWER(e.occupation) LIKE LOWER(:searchTerm) ORDER BY e.fullName";
         List<Employee> employees =
                 entityManager
                         .createQuery(query, Employee.class)
@@ -335,7 +345,10 @@ public class EmployeeResource {
                         .setMaxResults(size)
                         .getResultList();
 
-        PageResponse<Employee> response = new PageResponse<>(employees, totalElements, page, size);
+        // Map to DTOs
+        List<EmployeeDTO> employeeDTOs = employees.stream().map(EmployeeDTO::new).toList();
+        PageResponse<EmployeeDTO> response =
+                new PageResponse<>(employeeDTOs, totalElements, page, size);
         return Response.ok(response).build();
     }
 }
