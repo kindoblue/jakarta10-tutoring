@@ -4,7 +4,7 @@
              xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
 
-    <persistence-unit name="testPU" transaction-type="JTA">
+    <persistence-unit name="primary" transaction-type="JTA">
         <!-- Use JTA data source for container-managed transactions -->
         <jta-data-source>java:jboss/datasources/TestDS</jta-data-source>
 
