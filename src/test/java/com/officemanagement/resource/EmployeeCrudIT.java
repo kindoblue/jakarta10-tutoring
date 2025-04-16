@@ -59,7 +59,6 @@ public class EmployeeCrudIT extends BaseResourceTest {
                 .body("occupation", equalTo("Developer CreateGet"))
                 .body("createdAt", notNullValue())
                 .body("seatIds", hasSize(0));
-        System.out.println("GET request finished for Employee ID: " + createdEmployeeId.value);
     }
 
     @Test

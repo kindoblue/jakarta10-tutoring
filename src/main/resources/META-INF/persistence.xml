@@ -6,7 +6,7 @@
 
     <persistence-unit name="primary" transaction-type="JTA">
         <!-- Use JTA data source for container-managed transactions -->
-        <jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
+        <jta-data-source>java:jboss/datasources/PostgreSQLDS</jta-data-source>
 
         <!-- List all your entity classes -->
         <class>com.officemanagement.model.Employee</class>
@@ -22,7 +22,7 @@
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <!-- Specify H2 dialect -->
-            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
         </properties>
     </persistence-unit>
 </persistence> 

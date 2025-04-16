@@ -86,7 +86,6 @@ public class EmployeeResource {
     @Path("/{id}")
     @Transactional // Added Transactional annotation
     public Response getEmployee(@PathParam("id") Long id) {
-        System.out.println("[Resource] Attempting to get Employee with ID: " + id);
         Employee employee =
                 entityManager
                         .createQuery(
@@ -97,10 +96,8 @@ public class EmployeeResource {
                         .orElse(null);
 
         if (employee == null) {
-            System.out.println("[Resource] Employee with ID: " + id + " NOT FOUND.");
             return Response.status(Response.Status.NOT_FOUND).build();
         }
-        System.out.println("[Resource] Found Employee: " + employee.getFullName());
 
         // Ensure seats are initialized before mapping to DTO
         Hibernate.initialize(employee.getSeats());
@@ -298,16 +295,6 @@ public class EmployeeResource {
             @QueryParam("search") @DefaultValue("") String searchTerm,
             @QueryParam("page") @DefaultValue("0") int page,
             @QueryParam("size") @DefaultValue("10") int size) {
-
-        // Debug logging for received parameters
-        System.out.println(
-                "[DEBUG] /employees/search called with page="
-                        + page
-                        + ", size="
-                        + size
-                        + ", search='"
-                        + searchTerm
-                        + "'");
 
         // Add validation for pagination parameters
         if (page < 0) {

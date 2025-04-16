@@ -52,3 +52,7 @@ The CLI commands confirm:
    - Enabled: true
 
 The error you were seeing in the logs previously has been resolved. You now have both PostgreSQL (for production) and H2 (for testing) drivers properly configured in your JBoss EAP 8 server.
+
+
+
+ export POSTGRESQL_DRIVER_VERSION=42.7.3

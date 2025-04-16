@@ -20,7 +20,7 @@ public class EntityManagerProducer {
     public @interface TestDatabase {}
 
     // Inject the test persistence unit defined in persistence.xml
-    @PersistenceContext(unitName = "testPU")
+    @PersistenceContext(unitName = "primary")
     private EntityManager entityManager;
 
     @Produces

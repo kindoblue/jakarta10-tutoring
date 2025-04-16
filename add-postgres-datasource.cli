@@ -1,0 +1,14 @@
+module add --name=org.postgresql --resources=modules/org/postgresql/main/postgresql-42.7.3.jar --dependencies=javax.api,javax.transaction.api
+
+/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)
+
+/subsystem=datasources/data-source=PostgresDS:add(
+    jndi-name=java:/jdbc/PostgresDS,
+    driver-name=postgresql,
+    connection-url=jdbc:postgresql://db:5432/postgres,
+    user-name=postgres,
+    password=postgres,
+    min-pool-size=5,
+    max-pool-size=20,
+    enabled=true
+) 
