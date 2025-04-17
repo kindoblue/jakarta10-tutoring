@@ -51,5 +51,4 @@ public class FloorDTO {
         this.hasPlanimetry = floor.getPlanimetry() != null;
     }
 
-    // --- Getters and Setters removed (using @Getter, @Setter) ---
 }
