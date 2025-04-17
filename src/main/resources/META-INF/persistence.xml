@@ -16,8 +16,6 @@
         <class>com.officemanagement.model.Seat</class>
 
         <properties>
-            <!-- Automatically drop and create the schema on startup -->
-            <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
             <!-- Show SQL executed by Hibernate (optional, useful for debugging) -->
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
