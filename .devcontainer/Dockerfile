@@ -24,68 +24,48 @@ COPY --from=builder --chown=jboss:root $JBOSS_HOME $JBOSS_HOME
 # Define JBOSS_HOME explicitly for clarity
 ENV JBOSS_HOME=/opt/server
 
-# Steps to add:
-# (1) COPY the WAR/EAR to $JBOSS_HOME/standalone/deployments
-#       with the jboss:root user. For example:
-#     COPY --chown=jboss:root my-app.war $JBOSS_HOME/standalone/deployments 3
-# (2) (optional) server modification. You can modify EAP server configuration:
-#
-#       * invoke management operations. For example
-#
-#        RUN $JBOSS_HOME/bin/jboss-cli.sh --commands="embed-server,/system-property=Foo:add(value=Bar)"
-#
-#        First operation must always be embed-server.
-#
-#       * copy a modified standalone.xml in $JBOSS_HOME/standalone/configuration/
-#          for example
-#
-#      COPY --chown=jboss:root standalone.xml  $JBOSS_HOME/standalone/configuration
-
-# Custom configuration
-# COPY --chown=jboss:root conf/standalone.xml $JBOSS_HOME/standalone/configuration/
-
-# COPY --chown=jboss:root conf/oracle/jdbc/main $JBOSS_HOME/modules/system/layers/base/com/oracle/jdbc/main/
-
-#COPY --chown=jboss:root target/imageMan $JBOSS_HOME/standalone/deployments/imageMan
-
 # Add admin user
 RUN $JBOSS_HOME/bin/add-user.sh admin admin --silent
 
+
 ###########################################################
-## Install the procps package to get the ps command (start)
+## Install software
 USER root
 
 # Create the necessary directory and set permissions
 RUN mkdir -p /var/cache/yum/metadata && \
     chmod -R 755 /var/cache/yum
 
-# Install the procps-ng package to get the ps command
 RUN microdnf update -y && \
-    microdnf install -y procps-ng && \
-    microdnf clean all
+    microdnf install -y \
+      procps-ng \
+      sudo \
+      shadow-utils \
+      maven \
+      git \
+      postgresql \
+      tar \
+      diffutils && \
+    microdnf clean all && \
+    # Allow jboss user to run specific commands via sudo without password
+    # Use the correct path for chown, likely /usr/bin/chown
+    echo 'jboss ALL=(ALL) NOPASSWD: /usr/sbin/usermod, /usr/sbin/groupmod, /usr/bin/chown, /usr/bin/chmod' > /etc/sudoers.d/devcontainer-jboss && \
+    chmod 0440 /etc/sudoers.d/devcontainer-jboss
 
-# Switch back to the default user
-USER jboss
+# --- BEGIN CHANGE ---
+# Verify/ensure the jboss group exists (should from base image)
+RUN groupadd -g 185 jboss || echo "Group jboss (185) likely already exists"
 
-## Install the procps package to get the ps command (end)
-###########################################################
-
-###########################################################
-## Install Maven (start)
-USER root
-
-# Install Maven
-RUN microdnf update -y && \
-    microdnf install -y maven git postgresql tar diffutils && \
-    microdnf clean all
+# CRITICAL: Change jboss user's primary group from root (0) to jboss (185)
+# This makes groupmod target the 'jboss' group later instead of 'root'
+RUN usermod -g jboss jboss
+# --- END CHANGE ---
 
 # Change jboss user shell to /bin/bash
 RUN usermod --shell /bin/bash jboss
 
 # Switch back to the default user
 USER jboss
-## Install Maven (end)
-###########################################################
 
 # Ensure appropriate permissions for the copied files.
 RUN chmod -R ug+rwX $JBOSS_HOME

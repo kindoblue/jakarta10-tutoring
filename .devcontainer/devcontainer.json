@@ -24,5 +24,6 @@
     }
   },
   "remoteUser": "jboss",
-  "postCreateCommand": "chmod +x .devcontainer/load_floor_plan.sh .devcontainer/load_example_data.sh && .devcontainer/load_example_data.sh"
+  "updateRemoteUserUID": true,
+  "postCreateCommand": "sudo chmod +x .devcontainer/load_floor_plan.sh .devcontainer/load_example_data.sh && .devcontainer/load_example_data.sh"
 }
