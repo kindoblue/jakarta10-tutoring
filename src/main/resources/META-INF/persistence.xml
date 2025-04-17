@@ -15,5 +15,14 @@
         <class>com.officemanagement.model.OfficeRoom</class>
         <class>com.officemanagement.model.Seat</class>
 
+        <properties>
+            <!-- Show SQL executed by Hibernate (optional, useful for debugging) -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <!-- Specify H2 dialect -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+        </properties>
+
+
     </persistence-unit>
 </persistence> 
