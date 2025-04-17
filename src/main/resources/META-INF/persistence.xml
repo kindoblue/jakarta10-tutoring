@@ -6,7 +6,7 @@
 
     <persistence-unit name="primary" transaction-type="JTA">
         <!-- Use JTA data source for container-managed transactions -->
-        <jta-data-source>java:jboss/datasources/PostgreSQLDS</jta-data-source>
+        <jta-data-source>java:jboss/datasources/PostgresDS</jta-data-source>
 
         <!-- List all your entity classes -->
         <class>com.officemanagement.model.Employee</class>
