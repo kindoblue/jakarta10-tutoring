@@ -24,13 +24,6 @@
         <spotless.plugin.version>2.43.0</spotless.plugin.version>
         <lombok.version>1.18.32</lombok.version>
         <restassured.version>5.4.0</restassured.version>
-        <postgresql.driver.version>42.7.3</postgresql.driver.version>
-        <postgresql.database>postgres</postgresql.database>
-        <postgresql.user>postgres</postgresql.user>
-        <postgresql.password>postgres</postgresql.password>
-        <postgresql.service.host>db</postgresql.service.host>
-        <!-- Optionally, set a custom datasource name -->
-        <!-- <postgresql.datasource>java:/jdbc/PostgresDS</postgresql.datasource> -->
     </properties>
 
     <repositories>
@@ -425,50 +418,6 @@
                     </deployables>
                     <wait>true</wait>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jboss.eap.plugins</groupId>
-                <artifactId>eap-maven-plugin</artifactId>
-                <version>1.0.1.Final-redhat-00019</version>
-                <configuration>
-                    <channels>
-                        <channel>
-                            <manifest>
-                                <groupId>org.jboss.eap.channels</groupId>
-                                <artifactId>eap-8.0</artifactId>
-                            </manifest>
-                        </channel>
-                    </channels>
-                    <feature-packs>
-                        <feature-pack>
-                            <location>org.jboss.eap:wildfly-ee-galleon-pack</location>
-                        </feature-pack>
-                        <feature-pack>
-                            <location>org.jboss.eap:eap-datasources-galleon-pack</location>
-                        </feature-pack>
-                    </feature-packs>
-                    <layers>
-                        <layer>cloud-server</layer>
-                        <layer>postgresql-datasource</layer>
-                    </layers>
-                    <runtime-name>ROOT.war</runtime-name>
-                    <properties>
-                        <POSTGRESQL_DRIVER_VERSION>42.7.3</POSTGRESQL_DRIVER_VERSION>
-                        <POSTGRESQL_DATABASE>${postgresql.database}</POSTGRESQL_DATABASE>
-                        <POSTGRESQL_USER>${postgresql.user}</POSTGRESQL_USER>
-                        <POSTGRESQL_PASSWORD>${postgresql.password}</POSTGRESQL_PASSWORD>
-                        <POSTGRESQL_SERVICE_HOST>${postgresql.service.host}</POSTGRESQL_SERVICE_HOST>
-                        <!-- Optionally, set a custom datasource name -->
-                        <!-- <POSTGRESQL_DATASOURCE>${postgresql.datasource}</POSTGRESQL_DATASOURCE> -->
-                    </properties>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>package</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

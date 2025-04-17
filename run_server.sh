@@ -1,14 +1,12 @@
 #!/bin/bash
 set -e
 
-# Set required Postgres datasource environment variables for JBoss EAP 8
-export POSTGRESQL_USER=postgres
-export POSTGRESQL_PASSWORD=postgres
-export POSTGRESQL_DATABASE=postgres
-export POSTGRESQL_SERVICE_HOST=db
+# Build the WAR file
+mvn package
 
-# Start the provisioned JBoss EAP server
-cd "$(dirname "$0")/target/server"
+# Copy the WAR to the JBoss deployments directory
+cp target/office-management-system.war /opt/server/standalone/deployments/ROOT.war
 
-# Start the server, binding to all interfaces
+# Start the preinstalled JBoss EAP server
+cd /opt/server
 bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 

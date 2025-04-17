@@ -21,6 +21,9 @@ FROM registry.redhat.io/jboss-eap-8/eap8-openjdk21-runtime-openshift-rhel9:lates
 # Set appropriate ownership and permissions.
 COPY --from=builder --chown=jboss:root $JBOSS_HOME $JBOSS_HOME
 
+# Define JBOSS_HOME explicitly for clarity
+ENV JBOSS_HOME=/opt/server
+
 # Steps to add:
 # (1) COPY the WAR/EAR to $JBOSS_HOME/standalone/deployments
 #       with the jboss:root user. For example:
@@ -71,13 +74,9 @@ USER jboss
 ## Install Maven (start)
 USER root
 
-# Download PostgreSQL JDBC Driver
-RUN curl -L -o /tmp/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
-RUN chown jboss:jboss /tmp/postgresql.jar
-
 # Install Maven
 RUN microdnf update -y && \
-    microdnf install -y maven git postgresql tar && \
+    microdnf install -y maven git postgresql tar diffutils && \
     microdnf clean all
 
 # Change jboss user shell to /bin/bash
@@ -93,8 +92,28 @@ RUN chmod -R ug+rwX $JBOSS_HOME
 
 # Copy custom configuration and define PostgreSQL module
 COPY --chown=jboss:root conf/standalone.xml $JBOSS_HOME/standalone/configuration/
-RUN $JBOSS_HOME/bin/jboss-cli.sh --commands="embed-server --std-out=echo,module add --name=org.postgresql.jdbc --resources=/tmp/postgresql.jar --dependencies=java.sql\\,java.xml\\,java.logging\\,jakarta.transaction.api\\,jakarta.servlet.api,stop-embedded-server" && \
-    rm /tmp/postgresql.jar
+
+# Download PostgreSQL JDBC Driver
+RUN curl -L -o /tmp/postgresql.jar https://jdbc.postgresql.org/download/postgresql-42.7.3.jar
+
+# Create the module directory for Postgres driver
+RUN mkdir -p $JBOSS_HOME/modules/org/postgresql/main
+
+# Move the JAR and module.xml into the module directory
+RUN mv /tmp/postgresql.jar $JBOSS_HOME/modules/org/postgresql/main/postgresql.jar
+COPY --chown=jboss:root conf/module.xml $JBOSS_HOME/modules/org/postgresql/main/module.xml
+
+# Debug: show environment variables and directory contents
+RUN echo "JBOSS_HOME=$JBOSS_HOME" && \
+    echo "PWD=$(pwd)" && \
+    echo "HOME=$HOME" && \
+    ls -la $JBOSS_HOME/modules/org/postgresql/main/
+
+# Copy CLI script
+COPY --chown=jboss:root conf/add-postgres-datasource.cli $JBOSS_HOME/add-postgres-datasource.cli
+
+# Run CLI script (module creation, driver registration, datasource creation)
+RUN $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/add-postgres-datasource.cli
 
 EXPOSE 8080 8787 9990
 
