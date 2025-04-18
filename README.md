@@ -1,365 +1,142 @@
 # Office Management System
 
 ![Build Status](https://github.com/kindoblue/java-tutoring/actions/workflows/build.yml/badge.svg)
-![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)
-![Java Version](https://img.shields.io/badge/Java-11-orange?logo=java)
+![Java Version](https://img.shields.io/badge/Java-21-orange?logo=openjdk)
+![Jakarta EE Version](https://img.shields.io/badge/Jakarta%20EE-10-blue?logo=jakartaee)
+![Application Server](https://img.shields.io/badge/JBoss%20EAP-8-red)
 ![Last Commit](https://img.shields.io/github/last-commit/kindoblue/java-tutoring)
 
-A Java-based office management system that provides a RESTful API for managing office spaces, employees, and seat assignments. The system allows you to:
-- Create and manage multiple floors with rooms
-- Track and assign seats to employees
-- Search employees with pagination and filtering
-- Monitor office space utilization
+A Java-based office management system built with Jakarta EE 10 and running on JBoss EAP 8. It provides a RESTful API for managing office spaces (floors, rooms, seats), employees, seat assignments (many-to-many), and viewing SVG floor plans.
 
 ## Table of Contents
-- [Technologies Used](#technologies-used)
+- [Overview](#overview)
 - [Features](#features)
+- [Technology Stack](#technology-stack)
 - [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Development Container Details](#development-container-details)
+- [Quick Start (Dev Container)](#quick-start-dev-container)
+- [Development Environment](#development-environment)
 - [Database Setup](#database-setup)
 - [Building and Running](#building-and-running)
 - [API Documentation](#api-documentation)
-- [Example API Requests](#example-api-requests)
+- [Key Code Packages](#key-code-packages)
+- [Testing](#testing)
 - [Contributing](#contributing)
-- [Error Handling](#error-handling)
+- [Educational Purpose](#educational-purpose)
 
-## Technologies Used
+## Overview
 
-- Java 11
-- Hibernate 5.6
-- Jersey (JAX-RS) 2.34
-- PostgreSQL
-- HikariCP
-- Maven
+This system demonstrates a modern Java web application using Jakarta EE 10 standards deployed on JBoss EAP 8. It manages a hierarchical office structure, tracks employees, and handles flexible many-to-many seat assignments. The application includes features like searching, pagination, statistics, and SVG floor plan visualization.
 
 ## Features
 
-- **Employee Management**
-  - Create and update employee profiles
-  - Search employees by name or occupation
-  - Paginated results for efficient data retrieval
-  
-- **Office Space Management**
-  - Hierarchical structure: Floors → Rooms → Seats
-  - Prevent duplicate floor/room numbers
-  - Track seat availability and assignments
-  
-- **Seat Assignment System**
-  - Assign/unassign seats to employees
-  - Prevent double booking of seats
-  - View seat occupancy status
-  
-- **API Features**
-  - RESTful endpoints with proper HTTP methods
-  - Comprehensive error handling
-  - Input validation
-  - Pagination support
-  
-- **Technical Features**
-  - Connection pooling with HikariCP
-  - Hibernate for ORM
-  - Containerized development environment
-  - Automated tests
+*   **Employee Management**: CRUD operations, search by name/occupation, paginated results.
+*   **Office Space Management**: Manage Floors, Rooms, and Seats with a clear hierarchy.
+*   **Seat Assignment**: Many-to-many relationship between Employees and Seats. Assign/unassign seats.
+*   **Floor Planimetry**: Upload, store, and retrieve SVG floor plans for visualization.
+*   **Geometry Updates**: Partially update room and seat positions/dimensions via PATCH requests.
+*   **Statistics**: API endpoint to get basic office statistics (counts of entities).
+*   **RESTful API**: Well-defined endpoints using JAX-RS.
+*   **Data Persistence**: Uses JPA/Hibernate with PostgreSQL.
+*   **Containerized Development**: Consistent environment using VS Code Dev Containers and Docker.
+
+## Technology Stack
+
+*   **Java**: Version 21
+*   **Jakarta EE**: Version 10 (JAX-RS, JPA, CDI, etc.)
+*   **Application Server**: JBoss EAP 8
+*   **ORM**: Hibernate (via Jakarta Persistence API)
+*   **Database**: PostgreSQL 15
+*   **Build Tool**: Maven
+*   **API Framework**: JAX-RS (provided by JBoss EAP)
+*   **JSON Processing**: Jackson (provided by JBoss EAP)
+*   **Development Environment**: Docker, VS Code Dev Containers
+*   **Testing**: JUnit 5, Arquillian, REST Assured
+*   **Code Quality**: Lombok (for reducing boilerplate), Spotless (for formatting)
 
 ## Prerequisites
 
-- [Visual Studio Code](https://code.visualstudio.com/download)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- VSCode Extension: [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+*   [Visual Studio Code](https://code.visualstudio.com/download)
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine + Docker Compose)
+*   VSCode Extension: [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) (ID: `ms-vscode-remote.remote-containers`)
 
-## Quick Start
+## Quick Start (Dev Container)
 
-1. Clone this repository
-2. Open VSCode
-3. Install the "Dev Containers" extension if you haven't already
-4. Open the project folder in VSCode
-5. When prompted "Folder contains a Dev Container configuration file. Reopen folder to develop in a container?" click "Reopen in Container"
+1.  **Clone the repository:**
+    ```bash
+    git clone <repository-url>
+    cd java-tutoring
+    ```
+2.  **Open in VS Code:**
+    ```bash
+    code .
+    ```
+3.  **Reopen in Container:** VS Code will detect the `.devcontainer` configuration. When prompted ("Folder contains a Dev Container configuration file..."), click **"Reopen in Container"**.
 
-VSCode will then:
-1. Build and start two containers:
-   - A development container with all necessary tools (Java, Maven, etc.)
-   - A PostgreSQL database container (accessible on port 5432)
-2. Mount your project files into the development container
-3. Connect VSCode to the development container
+VS Code will build the Docker image (using the JBoss EAP 8 base image and installing necessary tools), start the application (`app`) and database (`db`) containers defined in `docker-compose.yml`, initialize the database schema, load example floor plans, and connect your VS Code instance to the running development container.
 
-## Development Container Details
+## Development Environment
 
-The project uses VSCode's Dev Containers feature to provide a consistent development environment. The setup includes:
-
-1. **Development Container**:
-   - Based on devbox image
-   - Contains all development tools (Java 11, Maven, etc.)
-   - Mounts your project directory
-   - Connected to the database container
-   - Configured with necessary extensions for Java development
-
-2. **Database Container**:
-   - PostgreSQL 15
-   - Persists data in a Docker volume
-   - Automatically initialized with schema
-   - Health checks ensure database is ready before app starts
+The Dev Container setup provides:
+*   **`app` Service:** Runs JBoss EAP 8 in a container based on the provided `Dockerfile`. Includes Java 21, Maven, PostgreSQL client, and necessary JBoss configuration. Your project workspace is mounted into `/workspaces/tutoring`.
+*   **`db` Service:** Runs a PostgreSQL 15 container. Data is persisted in a Docker volume (`tutoring-postgres-data`).
+*   **Automatic Setup:** The `postCreateCommand` in `devcontainer.json` executes `.devcontainer/load_example_data.sh`, which waits for the database, runs `schema.sql`, and loads example SVG floor plans using `load_floor_plan.sh`.
 
 ## Database Setup
 
-The PostgreSQL database is automatically:
-- Created with name: `office_management`
-- Initialized with tables: `floors`, `office_rooms`, and `seats`
-- Populated with sample data
-- Accessible with:
-  - Host: `localhost`
-  - Port: `5432`
-  - Username: `postgres`
-  - Password: `postgres`
+*   **Type:** PostgreSQL 15
+*   **Container Name:** `db` (within the Docker Compose network)
+*   **Database Name:** `office_management`
+*   **User:** `postgres`
+*   **Password:** `postgres`
+*   **Host (from `app` container):** `db`
+*   **Port:** `5432`
+
+The schema is automatically created and sample data is inserted when the Dev Container starts, as defined in `.devcontainer/schema.sql`.
 
 ## Building and Running
 
-### Building
-Build the project, run tests and create WAR file:
+All commands should be run *inside the Dev Container terminal* (VS Code: Terminal > New Terminal).
 
-```bash
-mvn package
-```
+1.  **Build the Project:**
+    ```bash
+    mvn package
+    ```
+    This compiles the code, runs tests (against an in-memory H2 database defined in `src/test/resources/META-INF/persistence.xml`), and packages the application into `target/office-management-system.war`.
 
-This will:
-1. Compile the Java code
-2. Run all tests
-3. Package the application into a WAR file
+2.  **Run the Application Server:**
+    ```bash
+    ./run_server.sh
+    ```
+    This script builds the WAR, copies it to the JBoss deployment directory (as `ROOT.war`), and starts the server.
 
-### Running
-Start the application using the embedded Tomcat server:
-
-```bash
-mvn cargo:run
-```
-
-This will:
-1. Start an embedded Tomcat server
-2. Deploy the WAR file to Tomcat
-3. Make the application available at `http://localhost:8080`
+The application will be available at `http://localhost:8080`. The JBoss Management 
 
 ## API Documentation
 
-### Floors
-- `GET /api/floors` - List all floors
-  - Response: Array of floors with basic info (id, name, floorNumber)
-- `GET /api/floors/{id}` - Get floor details with rooms and seats
-  - Response: Floor object with nested rooms and seats
-- `POST /api/floors` - Create a new floor
-  - Request Body: `{"name": "First Floor", "floorNumber": 1}`
-  - Response: Created floor object with id
-- `PUT /api/floors/{id}` - Update a floor
-  - Request Body: `{"name": "Updated Floor", "floorNumber": 1}`
-  - Response: Updated floor object
-- `DELETE /api/floors/{id}` - Delete a floor
-  - Response: 204 No Content
-  - Error: 400 Bad Request if floor has rooms
+The RESTful API is defined using JAX-RS under the base path `/api`. Data Transfer Objects (DTOs) are generally used for request/response bodies.
 
-### Rooms
-- `GET /api/rooms/{id}` - Get room details with seats
-  - Response: Room object with nested seats
-- `GET /api/rooms/{id}/seats` - Get all seats in a room
-  - Response: Array of seats
-- `POST /api/rooms` - Create a new room
-  - Request Body: `{"name": "Conference Room", "roomNumber": "101", "floor": {"id": 1}}`
-  - Response: Created room object with id
-- `PUT /api/rooms/{id}` - Update a room
-  - Request Body: `{"name": "Updated Room", "roomNumber": "102", "floor": {"id": 1}}`
-  - Response: Updated room object
-- `DELETE /api/rooms/{id}` - Delete a room
-  - Response: 204 No Content
-  - Error: 400 Bad Request if room has seats
-- `PATCH /api/rooms/{id}/geometry` - Update room and seat positions/dimensions
-  - Request Body: 
-    ```
-    {
-      "x": 100, "y": 200, "width": 500, "height": 300,
-      "seats": {
-        "1": {"x": 120, "y": 220, "width": 50, "height": 50, "rotation": 0},
-        "2": {"x": 180, "y": 220, "width": 50, "height": 50, "rotation": 0}
-      }
-    }
-    ```
-  - Response: Updated room with seat count
-  - Note: Only specified properties will be updated; missing properties remain unchanged
+For detailed endpoint descriptions, request/response examples, and to try out the API, refer to the `docs/api-tests.http` file. You can use the [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) VS Code extension with this file.
 
-### Seats
-- `GET /api/seats/{id}` - Get seat details
-  - Response: Seat object with room info
-- `POST /api/seats` - Create a new seat
-  - Request Body: `{"seatNumber": "101-A", "room": {"id": 1}}`
-  - Response: Created seat object with id
-- `PUT /api/seats/{id}` - Update a seat
-  - Request Body: `{"seatNumber": "101-B", "room": {"id": 1}}`
-  - Response: Updated seat object
-- `DELETE /api/seats/{id}` - Delete a seat
-  - Response: 204 No Content
-  - Error: 400 Bad Request if seat is assigned to an employee
+**Key API Resources:**
+*   `/floors`: Manage floors and their SVG planimetry.
+*   `/rooms`: Manage office rooms within floors.
+*   `/seats`: Manage individual seats within rooms.
+*   `/employees`: Manage employees and their seat assignments.
+*   `/stats`: Get basic statistics about the office space.
 
-### Employees
-- `GET /api/employees/{id}` - Get employee details
-  - Response: Employee object with assigned seats
-- `GET /api/employees/{id}/seats` - Get employee's assigned seats
-  - Response: Array of seats
-- `GET /api/employees/search` - Search employees with pagination
-  - Query Parameters:
-    - `search`: Search term for name or occupation
-    - `page`: Page number (default: 0)
-    - `size`: Page size (default: 10)
-  - Response: Paginated employee results
-- `POST /api/employees` - Create new employee
-  - Request Body: `{"fullName": "John Doe", "occupation": "Software Engineer"}`
-  - Response: Created employee object with id
-- `PUT /api/employees/{id}/assign-seat/{seatId}` - Assign seat to employee
-  - Response: Updated employee object with seats
-  - Error: 400 Bad Request if seat is already occupied
-- `DELETE /api/employees/{id}/unassign-seat/{seatId}` - Unassign seat from employee
-  - Response: Updated employee object with seats
-  - Error: 400 Bad Request if seat is not assigned to employee
+## Key Code Packages
 
-### Statistics
-- `GET /api/stats` - Get office statistics
-  - Response: Object containing:
-    - Total number of floors
-    - Total number of rooms
-    - Total number of seats
-    - Total number of employees
-    - Seat occupancy rate
+*   `com.officemanagement.model`: Contains JPA entity classes (e.g., `Employee`, `Floor`, `OfficeRoom`, `Seat`, `FloorPlanimetry`).
+*   `com.officemanagement.dto`: Contains Data Transfer Objects used in API responses.
+*   `com.officemanagement.resource`: Contains JAX-RS resource classes defining API endpoints.
+*   `com.officemanagement.util`: Utility classes (e.g., `EntityManagerProducer`).
+*   `com.officemanagement`: Contains the main JAX-RS `Application` class.
 
-## Example API Requests
+## Testing
 
-### Basic CRUD Operations
+*   **Integration Tests:** Located in `src/test/java/com/officemanagement/resource`. Use Arquillian to deploy the application to a managed JBoss EAP instance (within the test environment) and test API endpoints using REST Assured. These tests run against an in-memory H2 database configured in `src/test/resources/META-INF/persistence.xml`.
+*   **Unit Tests:** Basic JUnit 5 tests for model classes can be found in `src/test/java/com/officemanagement/model`.
 
+Run all tests with:
 ```bash
-# Get all floors
-curl http://localhost:8080/api/floors
-
-# Get specific floor with rooms and seats
-curl http://localhost:8080/api/floors/1
-
-# Create a new floor
-curl -X POST http://localhost:8080/api/floors \
--H "Content-Type: application/json" \
--d '{
-  "name": "First Floor",
-  "floorNumber": 1
-}'
-
-# Update a floor
-curl -X PUT http://localhost:8080/api/floors/1 \
--H "Content-Type: application/json" \
--d '{
-  "name": "Ground Floor",
-  "floorNumber": 0
-}'
-
-# Delete a floor
-curl -X DELETE http://localhost:8080/api/floors/1
-```
-
-### Employee and Seat Management
-
-```bash
-# Create a new employee
-curl -X POST http://localhost:8080/api/employees \
--H "Content-Type: application/json" \
--d '{
-  "fullName": "John Doe",
-  "occupation": "Software Engineer"
-}'
-
-# Search employees by occupation
-curl "http://localhost:8080/api/employees/search?search=engineer&page=0&size=10"
-
-# Get employee's assigned seats
-curl http://localhost:8080/api/employees/1/seats
-
-# Assign a seat to an employee
-curl -X PUT http://localhost:8080/api/employees/1/assign-seat/1
-
-# Unassign a seat
-curl -X DELETE http://localhost:8080/api/employees/1/unassign-seat/1
-```
-
-### Room and Seat Geometry
-
-```bash
-# Update room and seat geometry
-curl -X PATCH http://localhost:8080/api/rooms/1/geometry \
--H "Content-Type: application/json" \
--d '{
-  "x": 100, 
-  "y": 200, 
-  "width": 500, 
-  "height": 300,
-  "seats": {
-    "1": {"x": 120, "y": 220, "width": 50, "height": 50, "rotation": 0},
-    "2": {"x": 180, "y": 220, "width": 50, "height": 50, "rotation": 90}
-  }
-}'
-```
-
-### Office Statistics
-
-```bash
-# Get office statistics
-curl http://localhost:8080/api/stats
-```
-
-Example Response:
-```json
-{
-  "totalFloors": 3,
-  "totalRooms": 15,
-  "totalSeats": 100,
-  "occupiedSeats": 75,
-  "totalEmployees": 80,
-  "occupancyRate": 75.0
-}
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-- Follow Java code style guidelines
-- Write unit tests for new features
-- Update documentation for API changes
-- Use meaningful commit messages
-- Keep pull requests focused and atomic
-
-## Error Handling
-
-The API uses standard HTTP status codes and provides detailed error messages:
-
-### Common Status Codes
-- `200 OK` - Request successful
-- `201 Created` - Resource successfully created
-- `204 No Content` - Request successful (no response body)
-- `400 Bad Request` - Invalid input/parameters
-- `404 Not Found` - Resource not found
-- `409 Conflict` - Resource already exists
-- `500 Internal Server Error` - Server error
-
-### Common Error Scenarios
-- Creating duplicate floor/room numbers
-- Deleting floors with existing rooms
-- Deleting rooms with existing seats
-- Deleting seats assigned to employees
-- Invalid pagination parameters
-- Missing required fields
-- Invalid data formats
-
-### Error Response Format
-```json
-{
-  "status": 400,
-  "message": "Detailed error message",
-  "timestamp": "2024-03-21T10:15:30Z"
-}
-```
+mvn test
