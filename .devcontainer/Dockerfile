@@ -52,16 +52,8 @@ RUN microdnf update -y && \
     echo 'jboss ALL=(ALL) NOPASSWD: /usr/sbin/usermod, /usr/sbin/groupmod, /usr/bin/chown, /usr/bin/chmod' > /etc/sudoers.d/devcontainer-jboss && \
     chmod 0440 /etc/sudoers.d/devcontainer-jboss
 
-# --- BEGIN CHANGE ---
-# Verify/ensure the jboss group exists (should from base image)
-RUN groupadd -g 185 jboss || echo "Group jboss (185) likely already exists"
 
-# CRITICAL: Change jboss user's primary group from root (0) to jboss (185)
-# This makes groupmod target the 'jboss' group later instead of 'root'
-RUN usermod -g jboss jboss
-# --- END CHANGE ---
-
-# Change jboss user shell to /bin/bash
+# Change jboss user shell to /bin/bash (the default shell is /sbin/nologin)
 RUN usermod --shell /bin/bash jboss
 
 # Switch back to the default user
@@ -97,14 +89,6 @@ RUN $JBOSS_HOME/bin/jboss-cli.sh --file=$JBOSS_HOME/add-postgres-datasource.cli
 
 EXPOSE 8080 8787 9990
 
-ENV DB_PASSWORD_SLF=""
-ENV DB_PASSWORD_NCF=""
-ENV DB_PASSWORD_OPK=""
-ENV DB_PASSWORD_LIB=""
-ENV DB_PASSWORD_NSC=""
-
-# Run the JBoss EAP 8 server (in standalone mode) with the default configuration, with debug port enabled (8787)
-#CMD ["$JBOSS_HOME/bin/standalone.sh", "-b", "0.0.0.0", "-bmanagement", "0.0.0.0", "--debug", "*:8787"]
 CMD ["sh", "-c", "$JBOSS_HOME/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0 --debug *:8787"]
 
 

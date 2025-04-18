@@ -50,5 +50,4 @@ public class FloorDTO {
         // Use the custom getPlanimetry() method we kept in Floor
         this.hasPlanimetry = floor.getPlanimetry() != null;
     }
-
 }
