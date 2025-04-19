@@ -35,7 +35,7 @@ USER jboss
 # Ensure appropriate permissions for the copied files.
 RUN chmod -R ug+rwX $JBOSS_HOME
 
-# Copy custom configuration and define PostgreSQL module
+# Copy custom configuration 
 COPY --chown=jboss:root conf/standalone.xml $JBOSS_HOME/standalone/configuration/
 
 # Download PostgreSQL JDBC Driver

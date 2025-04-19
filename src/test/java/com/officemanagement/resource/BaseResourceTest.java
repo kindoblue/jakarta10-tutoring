@@ -64,7 +64,9 @@ public abstract class BaseResourceTest {
                                 .resolve(
                                         "com.h2database:h2",
                                         "io.rest-assured:rest-assured",
-                                        "org.hamcrest:hamcrest-core")
+                                        "org.hamcrest:hamcrest-core",
+                                        "io.swagger.core.v3:swagger-core-jakarta",
+                                        "io.swagger.core.v3:swagger-jaxrs2-jakarta")
                                 .withTransitivity()
                                 .asFile());
     }
