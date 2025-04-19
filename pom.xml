@@ -24,6 +24,11 @@
         <spotless.plugin.version>2.43.0</spotless.plugin.version>
         <lombok.version>1.18.32</lombok.version>
         <restassured.version>5.4.0</restassured.version>
+        <h2.version>2.1.214</h2.version>
+        <postgresql.version>42.7.3</postgresql.version>
+        <junit.jupiter.version>5.9.3</junit.jupiter.version>
+        <skip.unit.tests>false</skip.unit.tests>
+        <skip.integration.tests>false</skip.integration.tests>
     </properties>
 
     <repositories>
@@ -37,20 +42,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!-- keep this repository the first -->
-        <repository>
-            <id>jboss-public-maven-repository</id>
-            <name>JBoss Public Maven Repository</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <layout>default</layout>
-        </repository>
+        <!-- JBoss/Red Hat repository for EAP dependencies -->
         <repository>
             <id>redhat-ga-maven-repository</id>
             <name>Red Hat GA Maven Repository</name>
@@ -63,13 +55,6 @@
                 <enabled>false</enabled>
             </snapshots>
             <layout>default</layout>
-        </repository>
-        <repository>
-            <id>jboss</id>
-            <url>https://maven.repository.redhat.com/ga/</url>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
         </repository>
     </repositories>
     <pluginRepositories>
@@ -83,19 +68,7 @@
                 <enabled>false</enabled>
             </snapshots>
         </pluginRepository>
-        <!-- keep this repository the first -->
-        <pluginRepository>
-            <id>jboss-public-maven-repository</id>
-            <name>JBoss Public Maven Repository</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
+        <!-- JBoss/Red Hat repository for EAP plugins -->
         <pluginRepository>
             <id>redhat-ga-maven-repository</id>
             <name>Red Hat GA Maven Repository</name>
@@ -104,13 +77,6 @@
                 <enabled>true</enabled>
                 <updatePolicy>daily</updatePolicy>
             </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-            <id>jboss</id>
-            <url>https://maven.repository.redhat.com/ga/</url>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -140,7 +106,7 @@
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-core</artifactId>
                 <version>3.6.3</version>
-                <scope>provided</scope> <!-- Should not be needed at runtime, only for resolver -->
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
@@ -160,8 +126,7 @@
                 <version>3.6.3</version>
                 <scope>provided</scope>
             </dependency>
-            <!-- Removed explicit definitions, relying on BOMs -->
-            <!-- JBoss Log Manager -->
+            <!-- JBoss Log Manager (managed here for both runtime and test) -->
             <dependency>
                 <groupId>org.jboss.logmanager</groupId>
                 <artifactId>jboss-logmanager</artifactId>
@@ -171,7 +136,7 @@
     </dependencyManagement>
 
     <dependencies>
-        <!-- Explicitly depend on Jakarta EE 10 API -->
+        <!-- Jakarta EE 10 API (provided by server) -->
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
@@ -179,7 +144,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Lombok -->
+        <!-- Lombok (compile-time only) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -187,62 +152,60 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Added Jackson Annotations -->
+        <!-- Jackson Annotations (provided by EAP BOM) -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
-            <!-- Version should be managed by EAP BOM -->
-            <scope>provided</scope> <!-- Provided by JBoss EAP -->
+            <scope>provided</scope>
         </dependency>
 
-        <!-- Added Hibernate Core (includes jboss-logging transitively) -->
+        <!-- Hibernate Core (provided by EAP BOM) -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-core</artifactId>
-            <!-- Version should be managed by EAP BOM -->
-            <scope>provided</scope> <!-- Provided by JBoss EAP -->
+            <scope>provided</scope>
         </dependency>
 
-        <!-- RESTEasy Jackson Provider -->
+        <!-- RESTEasy Jackson Provider (provided by EAP BOM) -->
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jackson2-provider</artifactId>
-            <!-- Version managed by EAP BOM -->
             <scope>provided</scope>
+        </dependency>
+
+        <!-- Jackson Datatype JSR310 for Java 8 Date/Time (provided by EAP BOM) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.9.3</version>
+            <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <!-- Arquillian JUnit 5 integration -->
         <dependency>
             <groupId>org.jboss.arquillian.junit5</groupId>
             <artifactId>arquillian-junit5-container</artifactId>
-            <!-- Version managed by Arquillian BOM -->
             <scope>test</scope>
         </dependency>
-
         <!-- Arquillian container adapter (managed WildFly, similar to EAP 8) -->
         <dependency>
             <groupId>org.wildfly.arquillian</groupId>
             <artifactId>wildfly-arquillian-container-managed</artifactId>
-            <!-- Version managed by Arquillian BOM -->
             <scope>test</scope>
         </dependency>
-
-        <!-- Required for managed container - Using explicit public version -->
+        <!-- Required for managed container -->
         <dependency>
             <groupId>org.wildfly.core</groupId>
             <artifactId>wildfly-controller-client</artifactId>
             <version>${version.wildfly.management}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- Added back for tests using RestAssured -->
+        <!-- RestAssured for API testing -->
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
@@ -252,60 +215,65 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-core</artifactId>
-            <!-- Version typically managed by rest-assured or BOMs, but can be explicit -->
-            <!-- <version>...</version> -->
             <scope>test</scope>
         </dependency>
-
         <!-- H2 Database for In-Memory Testing -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <!-- Specify a recent version, e.g., 2.1.214 -->
-            <version>2.1.214</version>
+            <version>${h2.version}</version>
             <scope>test</scope>
         </dependency>
-
         <!-- ShrinkWrap Resolver for Arquillian deployment -->
         <dependency>
             <groupId>org.jboss.shrinkwrap.resolver</groupId>
             <artifactId>shrinkwrap-resolver-depchain</artifactId>
-            <!-- Version managed by dependencyManagement -->
             <type>pom</type>
             <scope>test</scope>
         </dependency>
-
-        <!-- PostgreSQL driver needed for ShrinkWrap test deployment -->
+        <!-- PostgreSQL driver for test deployments -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.7.3</version> <!-- Align with version used in Dockerfile if possible -->
+            <version>${postgresql.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- JBoss Log Manager -->
+        <!-- JBoss Log Manager for tests (version managed by dependencyManagement) -->
         <dependency>
             <groupId>org.jboss.logmanager</groupId>
             <artifactId>jboss-logmanager</artifactId>
-            <!-- Version should now be managed by dependencyManagement -->
-            <!-- <version>2.1.12.Final</version> -->
             <scope>test</scope>
         </dependency>
-
-        <!-- Added Jackson Datatype JSR310 for Java 8 Date/Time -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <!-- Version should be managed by EAP BOM -->
-            <!-- Scope defaults to compile -->
-        </dependency>
-
     </dependencies>
 
     <build>
-        <!-- Set the name of the WAR archive -->
         <finalName>${project.artifactId}</finalName>
         <plugins>
+            <!-- Enforce Maven and Java version -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.6.3,)</version>
+                                </requireMavenVersion>
+                                <requireJavaVersion>
+                                    <version>[21,)</version>
+                                </requireJavaVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Java compilation -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${compiler-plugin.version}</version>
@@ -322,15 +290,15 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            <!-- Added Maven WAR Plugin -->
+            <!-- WAR packaging -->
             <plugin>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>${war-plugin.version}</version>
                 <configuration>
-                    <!-- Fail if web.xml is missing, which is standard for Jakarta EE -->
                     <failOnMissingWebXml>false</failOnMissingWebXml>
                 </configuration>
             </plugin>
+            <!-- Unit tests -->
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
@@ -339,11 +307,10 @@
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
                     </systemPropertyVariables>
-                    <!-- Skip unit tests during integration test phase -->
                     <skipTests>${skip.unit.tests}</skipTests>
                 </configuration>
             </plugin>
-            <!-- Added Maven Failsafe Plugin for integration tests -->
+            <!-- Integration tests -->
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${failsafe-plugin.version}</version>
@@ -359,17 +326,12 @@
                     <systemPropertyVariables>
                         <serverConfig>arquillian-standalone.xml</serverConfig>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                        <!-- Set JBOSS_HOME for managed container -->
-                        <!-- Ensure this points to a valid JBoss EAP 8 / WildFly
-                        installation -->
-                        <!-- You might need to download/unzip one as part of the build or
-                        point to an existing one -->
                         <jboss.home>/opt/server</jboss.home>
                     </systemPropertyVariables>
-                    <!-- Skip integration tests during unit test phase -->
                     <skipTests>${skip.integration.tests}</skipTests>
                 </configuration>
             </plugin>
+            <!-- Code formatting -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -388,11 +350,12 @@
                 <executions>
                     <execution>
                         <goals>
-                            <goal>check</goal> <!-- Use 'apply' to auto-format -->
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
+            <!-- JBoss container management for integration tests -->
             <plugin>
                 <groupId>org.codehaus.cargo</groupId>
                 <artifactId>cargo-maven3-plugin</artifactId>
@@ -423,41 +386,8 @@
     </build>
 
     <profiles>
+        <!-- Profile to skip all tests -->
         <profile>
-            <!-- Profile to configure Arquillian for managed WildFly/EAP -->
-            <id>arquillian-wildfly-managed</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.wildfly.arquillian</groupId>
-                    <artifactId>wildfly-arquillian-container-managed</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-failsafe-plugin</artifactId>
-                        <configuration>
-                            <systemPropertyVariables>
-                                <serverConfig>arquillian-standalone.xml</serverConfig>
-                                <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                <!-- Set JBOSS_HOME for managed container -->
-                                <!-- Ensure this points to a valid JBoss EAP 8 / WildFly
-                                installation -->
-                                <!-- You might need to download/unzip one as part of the build or
-                                point to an existing one -->
-                                <jboss.home>${env.JBOSS_HOME}</jboss.home>
-                            </systemPropertyVariables>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <!-- Optional: Profile to skip all tests -->
             <id>skip-tests</id>
             <properties>
                 <skip.unit.tests>true</skip.unit.tests>
