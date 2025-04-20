@@ -1,0 +1,12 @@
+<module xmlns="urn:jboss:module:1.1" name="org.postgresql">
+  <resources>
+    <resource-root path="postgresql.jar"/>
+  </resources>
+  <dependencies>
+    <module name="java.sql"/>
+    <module name="java.xml"/>
+    <module name="java.logging"/>
+    <module name="jakarta.transaction.api"/>
+    <module name="jakarta.servlet.api"/>
+  </dependencies>
+</module> 

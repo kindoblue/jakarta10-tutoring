@@ -1,0 +1,16 @@
+embed-server --std-out=echo
+
+# Module is already created in Dockerfile, so we don't need this:
+# module add --name=org.postgresql --resources=/opt/server/modules/org/postgresql/main/postgresql.jar --dependencies=javax.api,javax.transaction.api
+
+# Add PostgreSQL JDBC driver
+/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-class-name=org.postgresql.Driver)
+
+# Add PostgreSQL datasource
+/subsystem=datasources/data-source=PostgresDS:add(jndi-name=java:jboss/datasources/PostgresDS,driver-name=postgresql,connection-url=jdbc:postgresql://db:5432/office_management,user-name=postgres,password=postgres,min-pool-size=5,max-pool-size=20,enabled=true)
+
+# Add H2 datasource - using quotes around the connection URL to handle special characters properly
+/subsystem=datasources/data-source=H2DS:add(jndi-name=java:jboss/datasources/H2DS,driver-name=h2,connection-url="jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",user-name=sa,password=sa,min-pool-size=5,max-pool-size=20,enabled=true)
+
+# Save the configuration
+stop-embedded-server 

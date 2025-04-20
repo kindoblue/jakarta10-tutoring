@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "start-cargo-server",
+      "type": "shell",
+      "command": "mvn clean package cargo:run",
+      "options": {
+        "env": {
+          "MAVEN_OPTS": "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=8000"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^\\[INFO\\] Tomcat .* has been started.*$",
+          "file": 1,
+          "location": 2,
+          "message": 3
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^\\[INFO\\] .*Starting Tomcat.*$",
+          "endsPattern": "^\\[INFO\\] Tomcat .* has been started.*$"
+        }
+      }
+    }
+  ]
+}

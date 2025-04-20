@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug Office Management REST Server",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 8000,
+      "preLaunchTask": "start-cargo-server",
+      "projectName": "office-management-system"
+    }
+  ],
+  "compounds": []
+} 
