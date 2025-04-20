@@ -450,4 +450,97 @@ public class FloorResourceIT extends BaseResourceTest {
                 .ifValidationFails()
                 .statusCode(Response.Status.NOT_FOUND.getStatusCode());
     }
+
+    @Test
+    public void testGetFloorWithEmbed() {
+        // 1. Create Floor
+        Floor floorPayload = new Floor();
+        floorPayload.setName("Embed Test Floor");
+        floorPayload.setFloorNumber(1200);
+        FloorDTO createdFloorDto =
+                given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
+                        .body(floorPayload)
+                        .when()
+                        .post("/floors")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .as(FloorDTO.class);
+        Long floorId = createdFloorDto.getId();
+
+        // 2. Create two rooms for this floor
+        OfficeRoom room1 = new OfficeRoom();
+        room1.setName("Room 1");
+        room1.setRoomNumber("R1");
+        Floor floorRef = new Floor();
+        floorRef.setId(floorId);
+        room1.setFloor(floorRef);
+        Number room1IdNum =
+                given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
+                        .body(room1)
+                        .when()
+                        .post("/rooms")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .path("id");
+        Long room1Id = room1IdNum.longValue();
+
+        OfficeRoom room2 = new OfficeRoom();
+        room2.setName("Room 2");
+        room2.setRoomNumber("R2");
+        room2.setFloor(floorRef);
+        Number room2IdNum =
+                given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
+                        .body(room2)
+                        .when()
+                        .post("/rooms")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode())
+                        .extract()
+                        .path("id");
+        Long room2Id = room2IdNum.longValue();
+
+        // 3. Create two seats for each room
+        for (Long roomId : new Long[] {room1Id, room2Id}) {
+            for (int i = 1; i <= 2; i++) {
+                com.officemanagement.model.Seat seat = new com.officemanagement.model.Seat();
+                seat.setSeatNumber("S" + i);
+                OfficeRoom roomRef = new OfficeRoom();
+                roomRef.setId(roomId);
+                seat.setRoom(roomRef);
+                given().contentType(ContentType.JSON)
+                        .baseUri("http://localhost:8080/test")
+                        .body(seat)
+                        .when()
+                        .post("/seats")
+                        .then()
+                        .statusCode(Response.Status.CREATED.getStatusCode());
+            }
+        }
+
+        // 4. Call /floors/{id}/embed and verify structure
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .get("/floors/" + floorId + "/embed")
+                .then()
+                .log()
+                .ifValidationFails()
+                .statusCode(Response.Status.OK.getStatusCode())
+                .body("id", equalTo(floorId.intValue()))
+                .body("name", equalTo("Embed Test Floor"))
+                .body("rooms.size()", equalTo(2))
+                .body("rooms.find { it.name == 'Room 1' }.seats.size()", equalTo(2))
+                .body("rooms.find { it.name == 'Room 2' }.seats.size()", equalTo(2));
+
+        // 5. Not found case
+        given().baseUri("http://localhost:8080/test")
+                .when()
+                .get("/floors/99999/embed")
+                .then()
+                .statusCode(Response.Status.NOT_FOUND.getStatusCode());
+    }
 }

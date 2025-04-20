@@ -1,5 +1,6 @@
 package com.officemanagement.resource;
 
+import com.officemanagement.dto.EmbeddedFloorDTO;
 import com.officemanagement.dto.FloorDTO;
 import com.officemanagement.model.Floor;
 import com.officemanagement.model.FloorPlanimetry;
@@ -236,6 +237,34 @@ public class FloorResource {
 
         Floor updatedFloor = entityManager.find(Floor.class, id);
         FloorDTO dto = new FloorDTO(updatedFloor);
+        return Response.ok(dto).build();
+    }
+
+    @GET
+    @Path("/{id}/embed")
+    @Operation(
+            summary = "Get a floor by ID with embedded rooms and seats",
+            description = "Returns a floor by its ID, including nested rooms and seats.")
+    public Response getFloorWithEmbed(@PathParam("id") Long id) {
+        Floor floor =
+                entityManager
+                        .createQuery(
+                                "SELECT DISTINCT f FROM Floor f "
+                                        + "LEFT JOIN FETCH f.rooms "
+                                        + "LEFT JOIN FETCH f.rooms.seats "
+                                        + "LEFT JOIN FETCH f.rooms.seats.employees "
+                                        + "WHERE f.id = :id",
+                                Floor.class)
+                        .setParameter("id", id)
+                        .getResultStream()
+                        .findFirst()
+                        .orElse(null);
+
+        if (floor == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        EmbeddedFloorDTO dto = new EmbeddedFloorDTO(floor);
         return Response.ok(dto).build();
     }
 }

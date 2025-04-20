@@ -1,6 +1,7 @@
 package com.officemanagement.resource;
 
 import com.officemanagement.dto.EmployeeDTO;
+import com.officemanagement.dto.SeatDTO;
 import com.officemanagement.model.Employee;
 import com.officemanagement.model.Seat;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.hibernate.Hibernate;
 
 // Add static inner class for pagination response
@@ -113,26 +115,18 @@ public class EmployeeResource {
 
     @GET
     @Path("/{id}/seats")
+    @Transactional
     @Operation(
             summary = "Get seats assigned to employee",
             description = "Returns all seats assigned to a specific employee.")
     public Response getEmployeeSeats(@PathParam("id") Long id) {
-        // Use EntityManager
-        // Temporarily removed all fetch joins for debugging
         Employee employee =
                 entityManager
-                        .createQuery(
-                                "select e from Employee e "
-                                        +
-                                        // "left join fetch e.seats s " +
-                                        // "left join fetch s.room r " +
-                                        // "left join fetch r.floor f " +
-                                        "where e.id = :id",
-                                Employee.class)
+                        .createQuery("select e from Employee e where e.id = :id", Employee.class)
                         .setParameter("id", id)
                         .getResultStream()
                         .findFirst()
-                        .orElse(null); // Use getResultStream().findFirst().orElse(null)
+                        .orElse(null);
 
         if (employee == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -141,7 +135,13 @@ public class EmployeeResource {
         // Explicitly initialize lazy collection before returning
         Hibernate.initialize(employee.getSeats());
 
-        return Response.ok(employee.getSeats()).build();
+        // Map to DTOs to avoid lazy loading issues
+        Set<SeatDTO> seatDTOs =
+                employee.getSeats().stream()
+                        .map(SeatDTO::new)
+                        .collect(java.util.stream.Collectors.toSet());
+
+        return Response.ok(seatDTOs).build();
     }
 
     @POST
