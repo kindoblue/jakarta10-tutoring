@@ -8,9 +8,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.*;
 
-// Import Hibernate
-
-/** Data Transfer Object for Floor entities. */
+/**
+ * Data Transfer Object for Floor entities. Contains only basic floor information and a set of room
+ * IDs.
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -26,28 +27,24 @@ public class FloorDTO {
     private Set<Long> roomIds; // IDs of rooms on this floor
     private boolean hasPlanimetry;
 
-    // Default constructor provided by @NoArgsConstructor
-
-    // Constructor to map from Floor entity (Keep this custom one)
+    /**
+     * Constructs a FloorDTO from a Floor entity. Only room IDs are extracted, so no need to
+     * initialize the full collection.
+     *
+     * @param floor the Floor entity
+     */
     public FloorDTO(Floor floor) {
-        this.id = floor.getId(); // Assumes Floor has @Getter
-        this.name = floor.getName(); // Assumes Floor has @Getter
-        this.floorNumber = floor.getFloorNumber(); // Assumes Floor has @Getter
-        this.createdAt = floor.getCreatedAt(); // Assumes Floor has @Getter
-
-        // Safely handle potentially lazy collections
-        if (floor.getRooms() != null) { // Assumes Floor has @Getter
-            // Hibernate.initialize(floor.getRooms()); // May be needed
+        this.id = floor.getId();
+        this.name = floor.getName();
+        this.floorNumber = floor.getFloorNumber();
+        this.createdAt = floor.getCreatedAt();
+        if (floor.getRooms() != null) {
             this.roomIds =
-                    floor.getRooms().stream()
-                            .map(OfficeRoom::getId) // Assumes OfficeRoom has @Getter
-                            .collect(Collectors.toSet());
+                    floor.getRooms().stream().map(OfficeRoom::getId).collect(Collectors.toSet());
         } else {
             this.roomIds = Collections.emptySet();
         }
-
-        // Check if planimetry exists without loading the potentially large data
-        // Use the custom getPlanimetry() method we kept in Floor
+        // Only check for existence of planimetry, do not load the data
         this.hasPlanimetry = floor.getPlanimetry() != null;
     }
 }
